@@ -1,6 +1,6 @@
 use ndarray::prelude::*;
 
-use crate::{data::spiral_data, neuron::LayerDense};
+use crate::{data::spiral_data, neurons::LayerDense};
 
 pub fn run1() {
     let inputs = array![
