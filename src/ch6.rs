@@ -1,5 +1,5 @@
 use crate::{
-    activation_functions::ReLU,
+    activation_functions::{ReLU, Softmax},
     loss_functions::{Loss, LossCategoricalCrossentropy},
     neurons::LayerDense, analysis_functions::get_accuracy,
 };
@@ -15,7 +15,7 @@ pub fn run() {
     let mut dense1 = LayerDense::new(2, 3);
     let mut activation1 = ReLU::new();
     let mut dense2 = LayerDense::new(3, 3);
-    let mut activation2 = ReLU::new();
+    let mut activation2 = Softmax::new();
 
     // loss function
     let loss_function = LossCategoricalCrossentropy::new();
@@ -27,15 +27,15 @@ pub fn run() {
     let mut best_dense2_weights = dense2.weights.clone();
     let mut best_dense2_biases = dense2.biases.clone();
 
-    let training_rate = 0.05;
+    let training_rate = 0.005;
 
     // train the model
-    for iteration in 0..10000 {
+    for iteration in 0..100000 {
         // generate a new set of weights for iteration
-        dense1.weights = Array2::random((2, 3), Normal::new(0., training_rate).unwrap());
-        dense1.biases = Array1::random(3, Normal::new(0., training_rate).unwrap());
-        dense2.weights = Array2::random((3, 3), Normal::new(0., training_rate).unwrap());
-        dense2.biases = Array1::random(3, Normal::new(0., training_rate).unwrap());
+        dense1.weights = Array2::random((2, 3), Normal::new(0., training_rate).unwrap()) + &best_dense1_weights;
+        dense1.biases = Array1::random(3, Normal::new(0., training_rate).unwrap()) + &best_dense1_biases;
+        dense2.weights = Array2::random((3, 3), Normal::new(0., training_rate).unwrap()) + &best_dense2_weights;
+        dense2.biases = Array1::random(3, Normal::new(0., training_rate).unwrap()) + &best_dense2_biases;
 
         // perform a forward pass of our training data through this layer
         dense1.forward(&data);

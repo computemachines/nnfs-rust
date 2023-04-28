@@ -1,3 +1,5 @@
+#![allow(dead_code, unused)]
+
 pub mod ch2;
 pub mod ch3;
 pub mod ch4;
