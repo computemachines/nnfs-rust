@@ -3,7 +3,7 @@ use ndarray::{s, Array, Array1, Array2, Axis, Ix1, Ix2, ArrayView1};
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 use plotters::{prelude::*, style::full_palette::BLUEGREY};
 
-pub fn spiral_data(n: usize, k: usize) -> (Array2<f64>, Array1<u8>) {
+pub fn spiral_data(n: usize, k: usize) -> (Array2<f64>, Array1<usize>) {
     let d: usize = 2;
     let mut data = Array::zeros((n * k, d));
     let mut labels = Array::zeros(n * k);
@@ -22,12 +22,12 @@ pub fn spiral_data(n: usize, k: usize) -> (Array2<f64>, Array1<u8>) {
         data.slice_mut(s![ix.clone(), 1])
             .assign(&(&radius * &theta.mapv(f64::sin)));
 
-        labels.slice_mut(s![ix]).fill(c as u8);
+        labels.slice_mut(s![ix]).fill(c);
     }
     (data, labels) 
 }
 
-pub fn plot_scatter(data: &Array2<f64>, labels: &Array1<u8>, filename: &str) {
+pub fn plot_scatter(data: &Array2<f64>, labels: &Array1<usize>, filename: &str) {
     let root_area = BitMapBackend::new(filename, (600, 400)).into_drawing_area();
     root_area.fill(&WHITE).unwrap();
 

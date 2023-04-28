@@ -1,5 +1,5 @@
 use nnfs_rust as nnfs;
 
 fn main() {
-    nnfs::ch4::run();
+    nnfs::ch5::run();
 }

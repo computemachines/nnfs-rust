@@ -1,10 +1,13 @@
 pub mod ch2;
 pub mod ch3;
 pub mod ch4;
+pub mod ch5;
 
 pub mod data;
 pub mod neurons;
 pub mod activation_functions;
+pub mod loss_functions;
+pub mod analysis_functions;
 
 use ndarray::prelude::*;
 pub fn show_data() {
