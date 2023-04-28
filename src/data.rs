@@ -1,5 +1,5 @@
 /// The source of data for the NNFS book.
-use ndarray::{s, Array, Array1, Array2, ArrayView1, Axis, Ix1, Ix2};
+use ndarray::{s, Array, Array1, Array2};
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 use plotters::{prelude::*, style::full_palette::BLUEGREY};
 

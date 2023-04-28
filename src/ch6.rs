@@ -18,7 +18,7 @@ pub fn run() {
     let mut activation2 = ReLU::new();
 
     // loss function
-    let mut loss_function = LossCategoricalCrossentropy::new();
+    let loss_function = LossCategoricalCrossentropy::new();
 
     // helper variables
     let mut lowest_loss = f64::INFINITY;

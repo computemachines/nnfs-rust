@@ -1,4 +1,4 @@
-use ndarray::{prelude::*, Ix};
+use ndarray::{prelude::*};
 
 pub trait Loss<T> {
     fn calculate(&self, output: &Array2<f64>, y: &T) -> f64 {
