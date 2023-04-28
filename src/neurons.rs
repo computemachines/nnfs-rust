@@ -2,8 +2,8 @@ use ndarray::prelude::*;
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 
 pub struct LayerDense {
-    weights: Array2<f64>,
-    biases: Array1<f64>,
+    pub weights: Array2<f64>,
+    pub biases: Array1<f64>,
     pub output: Option<Array2<f64>>,
 }
 
