@@ -14,6 +14,11 @@
                 "run",
                 "-v"
             ],
+            "options": {
+                "env": {
+                    "RUST_BACKTRACE": "1"
+                }
+            },
             "command": "/home/codespace/.cargo/bin/cargo",
             "presentation": {
                 "reveal": "always",

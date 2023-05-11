@@ -5,6 +5,7 @@ pub mod ch3;
 pub mod ch4;
 pub mod ch5;
 pub mod ch6;
+pub mod ch9;
 
 pub mod data;
 pub mod neurons;
@@ -17,7 +18,7 @@ pub fn show_data() {
     // nnfs::ch3::run();
     let data = crate::data::spiral_data(50, 5);
 
-    for row in (&data.0).axis_iter(Axis(0)) {
+    for row in (data.0).axis_iter(Axis(0)) {
         println!("{:?}", row);
     }
 

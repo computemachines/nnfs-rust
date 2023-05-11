@@ -87,7 +87,7 @@ pub fn plot_scatter(data: &Array2<f64>, labels: &Array1<usize>, filename: &str) 
         data.outer_iter()
             .zip(labels.into_iter())
             .map(|(point, label)| {
-                Circle::new((point[0], point[1]), 3, colors[*label as usize].filled())
+                Circle::new((point[0], point[1]), 3, colors[*label].filled())
             }),
     )
     .unwrap();

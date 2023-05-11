@@ -31,13 +31,13 @@ pub fn run() {
 
     // perform forward pass through activation function
     // takes in output from previous layer
-    activation1.forward(&dense1.output.as_ref().unwrap());
+    activation1.forward(dense1.output.as_ref().unwrap());
 
     // perform forward pass through second Dense layer
-    dense2.forward(&activation1.output.as_ref().unwrap());
+    dense2.forward(activation1.output.as_ref().unwrap());
 
     // perform forward pass through activation function
-    activation2.forward(&dense2.output.as_ref().unwrap());
+    activation2.forward(dense2.output.as_ref().unwrap());
 
     // lets see output of the first few samples:
     println!(
@@ -47,14 +47,14 @@ pub fn run() {
 
     // perform first pass through activation function
     // it takes in output from the second dense layer and returns loss
-    let loss = loss_function.calculate(&activation2.output.as_ref().unwrap(), &labels);
+    let loss = loss_function.calculate(activation2.output.as_ref().unwrap(), &labels);
 
     // print loss value
     println!("loss: {:.3}", loss);
 
     // calculate accuracy from output of activation2 and targets
     let accuracy = crate::analysis_functions::get_accuracy(
-        &activation2.output.as_ref().unwrap(),
+        activation2.output.as_ref().unwrap(),
         &labels,
     );
     println!("accuracy: {:.3}", accuracy);

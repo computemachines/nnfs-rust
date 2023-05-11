@@ -39,14 +39,14 @@ pub fn run() {
 
         // perform a forward pass of our training data through this layer
         dense1.forward(&data);
-        activation1.forward(&dense1.output.as_ref().unwrap());
-        dense2.forward(&activation1.output.as_ref().unwrap());
-        activation2.forward(&dense2.output.as_ref().unwrap());
+        activation1.forward(dense1.output.as_ref().unwrap());
+        dense2.forward(activation1.output.as_ref().unwrap());
+        activation2.forward(dense2.output.as_ref().unwrap());
 
-        let loss = loss_function.calculate(&activation2.output.as_ref().unwrap(), &labels);
+        let loss = loss_function.calculate(activation2.output.as_ref().unwrap(), &labels);
 
         // calculate accuracy from output of activation2 and targets
-        let accuracy = get_accuracy(&activation2.output.as_ref().unwrap(), &labels);
+        let accuracy = get_accuracy(activation2.output.as_ref().unwrap(), &labels);
 
         // if loss is smaller - print and store weights and biases aside
         if loss < lowest_loss {

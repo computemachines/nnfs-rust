@@ -19,11 +19,11 @@ pub fn run() {
 
     // perform forward pass through activation function
     // takes in output from previous layer
-    activation1.forward(&dense1.output.as_ref().unwrap());
+    activation1.forward(dense1.output.as_ref().unwrap());
 
-    dense2.forward(&activation1.output.as_ref().unwrap());
+    dense2.forward(activation1.output.as_ref().unwrap());
 
-    activation2.forward(&dense2.output.as_ref().unwrap());
+    activation2.forward(dense2.output.as_ref().unwrap());
 
     println!("{:?}", activation2.output.as_ref().unwrap().slice(s![0..5, ..]));
 }
