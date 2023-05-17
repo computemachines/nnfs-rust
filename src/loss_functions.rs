@@ -17,7 +17,7 @@ pub trait Loss<T> {
     fn backward(&mut self, dvalues: &Array2<f64>, y_true: &T);
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LossCategoricalCrossentropy {
     pub output: Option<Array2<f64>>,
     pub dinputs: Option<Array2<f64>>,
@@ -89,6 +89,7 @@ impl Loss<Array2<f64>> for LossCategoricalCrossentropy {
 
 /// Softmax classifier - combined Softmax activation and cross-entropy loss for
 /// faster backward step
+#[derive(Clone)]
 pub struct SoftmaxLossCategoricalCrossEntropy {
     pub activation: activation_functions::Softmax,
     pub loss: LossCategoricalCrossentropy,

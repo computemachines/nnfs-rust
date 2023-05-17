@@ -256,6 +256,7 @@ pub fn softmax_catagorical_cross_entropy_combined_test() {
 
 pub fn full_model_code() {
     // create dataset
+    #[allow(non_snake_case)]
     let (X, y) = spiral_data(100, 3);
 
     // create dense layer with 2 input features and 3 output values

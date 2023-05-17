@@ -1,7 +1,7 @@
 use ndarray::prelude::*;
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LayerDense {
     pub weights: Array2<f64>,
     pub biases: Array1<f64>,
