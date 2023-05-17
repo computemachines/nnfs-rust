@@ -67,18 +67,19 @@ impl Network {
 
 pub fn run() {
     let num_epochs = 10000;
+    let num_labels = 5;
     let mut losses1 = Array1::zeros(num_epochs);
     let mut losses2 = Array1::zeros(num_epochs);
 
     #[allow(non_snake_case)]
-    let (data, labels) = spiral_data(100, 3);
+    let (data, labels) = spiral_data(100, num_labels);
 
-    let mut network = Network::new(3);
+    let mut network = Network::new(num_labels);
 
     // create optimizer object
     let mut optimizer = OptimizerSDG::from(OptimizerSDGConfig {
         learning_rate: 0.5,
-        decay_rate: 1e-3,
+        decay_rate: 5e-5,
         ..Default::default()
     });
     // let mut optimizer_other = OptimizerSDG::from(OptimizerSDGConfig {
@@ -100,7 +101,7 @@ pub fn run() {
         losses1[epoch] = loss;
         // losses2[epoch] = loss_other;
 
-        if epoch % 100 == 0 {
+        if epoch % 10 == 0 {
             println!("Epoch: {}", epoch);
             println!("Loss: {}", loss);
             println!("Accuracy: {}", accuracy);
@@ -111,8 +112,15 @@ pub fn run() {
             visualize_nn_scatter(
                 &data,
                 &labels,
+                num_labels,
                 |(x, y)| {
                     let NetworkOutput(_, prediction) = network_clone.forward(&array![[x, y]], &labels);
+                    let g = colorgrad::rainbow();
+    let colors: Vec<RGBAColor> =
+        (0..max_label).map(|i| {
+            let c = g.at(i as f64 / max_label as f64).to_rgba8();
+            RGBAColor(c[0], c[1], c[2], c[3] as f64 / 256.0)}).collect();
+
                     let r = prediction[[0, 0]] * 256.0;
                     let g = prediction[[0, 1]] * 256.0;
                     let b = prediction[[0, 2]] * 256.0;
@@ -142,6 +150,7 @@ pub fn run() {
     visualize_nn_scatter(
         &data,
         &labels,
+        num_labels,
         |(x, y)| {
             let NetworkOutput(_, prediction) = network.forward(&array![[x, y]], &labels);
             let r = prediction[[0, 0]] * 256.0;

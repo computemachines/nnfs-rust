@@ -1,7 +1,8 @@
 use std::ops::Range;
 
+use colorgrad;
 /// The source of data for the NNFS book.
-use ndarray::{s, Array, Array1, Array2};
+use ndarray::{iter::Lanes, s, Array, Array1, Array2};
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 use plotters::{coord::Shift, prelude::*, style::full_palette::BLUEGREY};
 
@@ -104,7 +105,7 @@ pub fn lin_map(value: f64, from: Range<f64>, to: Range<f64>) -> f64 {
 
 pub fn new_root_area(filename: &str, is_gif: bool) -> DrawingArea<BitMapBackend, Shift> {
     if is_gif {
-        BitMapBackend::gif(filename, (600, 400), 100)
+        BitMapBackend::gif(filename, (600, 400), 30)
             .unwrap()
             .into_drawing_area()
     } else {
@@ -116,9 +117,10 @@ pub fn new_root_area(filename: &str, is_gif: bool) -> DrawingArea<BitMapBackend,
 pub fn visualize_nn_scatter<'a>(
     data: &Array2<f64>,
     labels: &Array1<usize>,
+    max_label: usize,
     mut forward: impl FnMut((f64, f64)) -> RGBAColor,
     root_area: &DrawingArea<BitMapBackend<'a>, Shift>,
-){
+) {
     root_area.fill(&WHITE).unwrap();
 
     let mut min = [data[[0, 0]], data[[0, 1]]];
@@ -144,15 +146,20 @@ pub fn visualize_nn_scatter<'a>(
 
     ctx.configure_mesh().draw().unwrap();
 
-    let colors = vec![
-        RGBColor(200, 0, 0),
-        RGBColor(0, 200, 0),
-        RGBColor(0, 0, 200),
-        YELLOW,
-        CYAN,
-        MAGENTA,
-        BLACK,
-    ];
+    // let colors = vec![
+    //     RGBColor(200, 0, 0),
+    //     RGBColor(0, 200, 0),
+    //     RGBColor(0, 0, 200),
+    //     YELLOW,
+    //     CYAN,
+    //     MAGENTA,
+    //     BLACK,
+    // ];
+    let g = colorgrad::rainbow();
+    let colors: Vec<RGBAColor> =
+        (0..max_label).map(|i| {
+            let c = g.at(i as f64 / max_label as f64).to_rgba8();
+            RGBAColor(c[0], c[1], c[2], c[3] as f64 / 256.0)}).collect();
 
     let area = ctx.plotting_area();
     let pixel_range = area.get_pixel_range();
