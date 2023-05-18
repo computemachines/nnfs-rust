@@ -105,7 +105,7 @@ pub fn lin_map(value: f64, from: Range<f64>, to: Range<f64>) -> f64 {
 
 pub fn new_root_area(filename: &str, is_gif: bool) -> DrawingArea<BitMapBackend, Shift> {
     if is_gif {
-        BitMapBackend::gif(filename, (600, 400), 30)
+        BitMapBackend::gif(filename, (300, 200), 100)
             .unwrap()
             .into_drawing_area()
     } else {

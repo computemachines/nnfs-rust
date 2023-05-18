@@ -7,20 +7,17 @@ pub struct OptimizerSDG {
     pub current_learning_rate: f64,
     decay_rate: f64,
     iterations: usize,
+    momentum: f64,
 }
 
+#[derive(Clone, Copy)]
 pub struct OptimizerSDGConfig {
     pub learning_rate: f64,
     pub decay_rate: f64,
+    pub momentum: f64,
 }
 
 impl OptimizerSDG {
-    pub fn new(learning_rate: f64, decay_rate: f64) -> Self {
-        Self::from(OptimizerSDGConfig {
-            learning_rate,
-            decay_rate,
-        })
-    }
     // This is nice because I can add more params without breaking the api
     pub fn from(optimizer: OptimizerSDGConfig) -> Self {
         Self {
@@ -28,6 +25,7 @@ impl OptimizerSDG {
             current_learning_rate: optimizer.learning_rate,
             decay_rate: optimizer.decay_rate,
             iterations: 0,
+            momentum: optimizer.momentum,
         }
     }
     /// Call once before any parameter updates
@@ -40,9 +38,20 @@ impl OptimizerSDG {
     pub fn update_params(&self, layer: &mut LayerDense) {
         let dweights = layer.dweights.as_ref().unwrap();
         let dbias = layer.dbiases.as_ref().unwrap();
-        // Zip::from(layer.weights);
-        azip!((w in &mut layer.weights, &dw in dweights) *w += -self.learning_rate * dw);
-        azip!((b in &mut layer.biases, &db in dbias) *b += -self.learning_rate * db);
+        azip!((weight in &mut layer.weights,
+               weight_momentum in &mut layer.weight_momentums,
+               &dw in dweights) {
+            let weight_update = self.momentum * *weight_momentum - self.current_learning_rate * dw;
+            *weight += weight_update;
+            *weight_momentum = weight_update;
+        });
+        azip!((bias in &mut layer.biases,
+               bias_momentum in &mut layer.bias_momentums,
+               &db in dbias) {
+            let bias_update = self.momentum * *bias_momentum - self.current_learning_rate * db;
+            *bias += -self.current_learning_rate * db;
+            *bias_momentum = bias_update;
+        });
     }
     /// Call once after any parameter updates
     pub fn post_update_params(&mut self) {
@@ -52,7 +61,7 @@ impl OptimizerSDG {
 
 impl Default for OptimizerSDG {
     fn default() -> Self {
-        OptimizerSDG::new(1.0, 0.0)
+        OptimizerSDG::from(OptimizerSDGConfig::default())
     }
 }
 impl Default for OptimizerSDGConfig {
@@ -60,6 +69,7 @@ impl Default for OptimizerSDGConfig {
         Self {
             learning_rate: 1.0,
             decay_rate: 0.0,
+            momentum: 0.0,
         }
     }
 }

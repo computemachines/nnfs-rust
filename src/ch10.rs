@@ -1,12 +1,13 @@
 use crate::{
     activation_functions::ReLU,
     analysis_functions,
-    data::{spiral_data, visualize_nn_scatter, new_root_area},
+    data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::SoftmaxLossCategoricalCrossEntropy,
     neurons::LayerDense,
     optimizer::{OptimizerSDG, OptimizerSDGConfig},
 };
 
+use approx::AbsDiffEq;
 use ndarray::prelude::*;
 use plotters::prelude::*;
 
@@ -66,7 +67,7 @@ impl Network {
 }
 
 pub fn run() {
-    let num_epochs = 10000;
+    let num_epochs = 5000;
     let num_labels = 5;
     let mut losses1 = Array1::zeros(num_epochs);
     let mut losses2 = Array1::zeros(num_epochs);
@@ -77,18 +78,27 @@ pub fn run() {
     let mut network = Network::new(num_labels);
 
     // create optimizer object
-    let mut optimizer = OptimizerSDG::from(OptimizerSDGConfig {
-        learning_rate: 0.5,
-        decay_rate: 5e-5,
+    let config = OptimizerSDGConfig {
+        learning_rate: 1.0,
+        decay_rate: 1e-3,
+        momentum: 0.9,
         ..Default::default()
-    });
+    };
+    let mut optimizer = OptimizerSDG::from(config);
     // let mut optimizer_other = OptimizerSDG::from(OptimizerSDGConfig {
     //     learning_rate: 4.0,
     //     decay_rate: 1e-2,
     //     ..Default::default()
     // });
 
-    let mut gif = new_root_area("plots/ch10-animated-training.gif", true);
+    let gif_filename = format!(
+        "plots/ch10-lr{}-dr{}-m{}.gif",
+        config.learning_rate, config.decay_rate, config.momentum
+    );
+    let mut gif = new_root_area(
+        &gif_filename,
+        true,
+    );
 
     // train in loop
     for epoch in 0..num_epochs {
@@ -114,18 +124,24 @@ pub fn run() {
                 &labels,
                 num_labels,
                 |(x, y)| {
-                    let NetworkOutput(_, prediction) = network_clone.forward(&array![[x, y]], &labels);
+                    let NetworkOutput(loss, prediction_vector) =
+                        network_clone.forward(&array![[x, y]], &labels);
                     let g = colorgrad::rainbow();
-    let colors: Vec<RGBAColor> =
-        (0..max_label).map(|i| {
-            let c = g.at(i as f64 / max_label as f64).to_rgba8();
-            RGBAColor(c[0], c[1], c[2], c[3] as f64 / 256.0)}).collect();
-
-                    let r = prediction[[0, 0]] * 256.0;
-                    let g = prediction[[0, 1]] * 256.0;
-                    let b = prediction[[0, 2]] * 256.0;
-
-                    RGBAColor(r as u8, g as u8, b as u8, 0.5)
+                    let max_arg = prediction_vector
+                        .indexed_iter()
+                        .max_by(|(_, l1), (_, l2)| l1.partial_cmp(l2).unwrap())
+                        .unwrap()
+                        .0;
+                    let label_color = g.at(max_arg.1 as f64 / num_labels as f64);
+                    let hsla = label_color.to_hsla();
+                    let saturation = 1.0 / (1.0 + loss);
+                    let confidence = prediction_vector[[0, max_arg.1]];
+                    HSLColor(
+                        hsla.0 / 360.,
+                        hsla.1,
+                        lin_map(confidence, (1.0 / num_labels as f64)..1.0, 1.0..0.1),
+                    )
+                    .to_rgba()
                 },
                 &gif,
             );

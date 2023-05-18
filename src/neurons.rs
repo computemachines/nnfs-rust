@@ -10,6 +10,8 @@ pub struct LayerDense {
     pub dweights: Option<Array2<f64>>,
     pub dbiases: Option<Array1<f64>>,
     pub dinputs: Option<Array2<f64>>,
+    pub weight_momentums: Array2<f64>,
+    pub bias_momentums: Array1<f64>,
 }
 
 impl LayerDense {
@@ -19,6 +21,8 @@ impl LayerDense {
         Self {
             weights,
             biases,
+            weight_momentums: Array2::zeros((n_inputs, n_neurons)),
+            bias_momentums: Array1::zeros(n_neurons),
             ..Default::default()
         }
     }
