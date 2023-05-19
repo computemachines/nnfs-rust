@@ -4,7 +4,7 @@ use crate::{
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::SoftmaxLossCategoricalCrossEntropy,
     neurons::LayerDense,
-    optimizer::{OptimizerSDG, OptimizerSDGConfig, OptimizerAdaGrad, OptimizerAdaGradConfig},
+    optimizer::{OptimizerSDG, OptimizerSDGConfig, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerRMSProp, OptimizerRMSPropConfig},
 };
 
 use approx::AbsDiffEq;
@@ -78,13 +78,13 @@ pub fn run() {
     let mut network = Network::new(num_labels);
 
     // create optimizer object
-    let config = OptimizerAdaGradConfig {
+    let config = OptimizerRMSPropConfig {
         // learning_rate: 1.0,
         decay_rate: 1e-4,
         // momentum: 0.9,
         ..Default::default()
     };
-    let mut optimizer = OptimizerAdaGrad::from(config);
+    let mut optimizer = OptimizerRMSProp::from(config);
     // let mut optimizer_other = OptimizerSDG::from(OptimizerSDGConfig {
     //     learning_rate: 4.0,
     //     decay_rate: 1e-2,
@@ -92,8 +92,8 @@ pub fn run() {
     // });
 
     let gif_filename = format!(
-        "plots/ch10-ada-lr{}-dr{}-e{}.gif", 
-        config.learning_rate, config.decay_rate, config.epsilon
+        "plots/ch10-rms-lr{}-dr{}-e{}-rho{}.gif", 
+        config.learning_rate, config.decay_rate, config.epsilon, config.rho,
     );
     let mut gif = new_root_area(
         &gif_filename,
@@ -111,7 +111,7 @@ pub fn run() {
         losses1[epoch] = loss;
         // losses2[epoch] = loss_other;
 
-        if epoch % 10 == 0 {
+        if epoch % 1 == 0 {
             println!("Epoch: {}", epoch);
             println!("Loss: {}", loss);
             println!("Accuracy: {}", accuracy);
@@ -163,22 +163,8 @@ pub fn run() {
         // optimizer_other.post_update_params();
     }
 
-    visualize_nn_scatter(
-        &data,
-        &labels,
-        num_labels,
-        |(x, y)| {
-            let NetworkOutput(_, prediction) = network.forward(&array![[x, y]], &labels);
-            let r = prediction[[0, 0]] * 256.0;
-            let g = prediction[[0, 1]] * 256.0;
-            let b = prediction[[0, 2]] * 256.0;
-
-            RGBAColor(r as u8, g as u8, b as u8, 0.5)
-        },
-        &new_root_area("plots/ch10_network.png", false),
-    );
-
-    let root = BitMapBackend::new("plots/ch10.png", (1024 * 2, 768)).into_drawing_area();
+    let plot_filename = gif_filename.replace(".gif", ".png");
+    let root = BitMapBackend::new(&plot_filename, (1024 * 2, 768)).into_drawing_area();
     root.fill(&WHITE).unwrap();
 
     let mut chart = ChartBuilder::on(&root)
