@@ -4,7 +4,7 @@ use crate::{
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::SoftmaxLossCategoricalCrossEntropy,
     neurons::LayerDense,
-    optimizer::{OptimizerSDG, OptimizerSDGConfig},
+    optimizer::{OptimizerSDG, OptimizerSDGConfig, OptimizerAdaGrad, OptimizerAdaGradConfig},
 };
 
 use approx::AbsDiffEq;
@@ -67,7 +67,7 @@ impl Network {
 }
 
 pub fn run() {
-    let num_epochs = 5000;
+    let num_epochs = 1000;
     let num_labels = 5;
     let mut losses1 = Array1::zeros(num_epochs);
     let mut losses2 = Array1::zeros(num_epochs);
@@ -78,13 +78,13 @@ pub fn run() {
     let mut network = Network::new(num_labels);
 
     // create optimizer object
-    let config = OptimizerSDGConfig {
-        learning_rate: 1.0,
-        decay_rate: 1e-3,
-        momentum: 0.9,
+    let config = OptimizerAdaGradConfig {
+        // learning_rate: 1.0,
+        decay_rate: 1e-4,
+        // momentum: 0.9,
         ..Default::default()
     };
-    let mut optimizer = OptimizerSDG::from(config);
+    let mut optimizer = OptimizerAdaGrad::from(config);
     // let mut optimizer_other = OptimizerSDG::from(OptimizerSDGConfig {
     //     learning_rate: 4.0,
     //     decay_rate: 1e-2,
@@ -92,8 +92,8 @@ pub fn run() {
     // });
 
     let gif_filename = format!(
-        "plots/ch10-lr{}-dr{}-m{}.gif",
-        config.learning_rate, config.decay_rate, config.momentum
+        "plots/ch10-ada-lr{}-dr{}-e{}.gif", 
+        config.learning_rate, config.decay_rate, config.epsilon
     );
     let mut gif = new_root_area(
         &gif_filename,

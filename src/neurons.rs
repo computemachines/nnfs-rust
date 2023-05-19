@@ -3,15 +3,25 @@ use ndarray_rand::{rand_distr::Normal, RandomExt};
 
 #[derive(Default, Clone)]
 pub struct LayerDense {
+    pub n_inputs: usize,
+    pub n_neurons: usize,
+
     pub weights: Array2<f64>,
     pub biases: Array1<f64>,
+
+    // following values: Option<_> is used for uninitialized value
     pub output: Option<Array2<f64>>,
     pub inputs: Option<Array2<f64>>,
     pub dweights: Option<Array2<f64>>,
     pub dbiases: Option<Array1<f64>>,
     pub dinputs: Option<Array2<f64>>,
-    pub weight_momentums: Array2<f64>,
-    pub bias_momentums: Array1<f64>,
+
+    // remaining values: Option<_> is used to avoid allocating optional
+    // features. These should be initialized to zeros when needed.
+    pub weight_momentums: Option<Array2<f64>>,
+    pub bias_momentums: Option<Array1<f64>>,
+    pub weight_cache: Option<Array2<f64>>,
+    pub bias_cache: Option<Array1<f64>>,
 }
 
 impl LayerDense {
@@ -19,10 +29,12 @@ impl LayerDense {
         let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.01).unwrap());
         let biases = Array1::zeros(n_neurons);
         Self {
+            n_inputs,
+            n_neurons,
             weights,
             biases,
-            weight_momentums: Array2::zeros((n_inputs, n_neurons)),
-            bias_momentums: Array1::zeros(n_neurons),
+            weight_momentums: None,
+            bias_momentums: None,
             ..Default::default()
         }
     }
