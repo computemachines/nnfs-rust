@@ -43,14 +43,14 @@ impl OptimizerRMSProp {
         azip!((mut weight in &mut layer.weights,
                mut weight_cache_i in layer.weight_cache.get_or_insert_with(|| Array2::zeros((layer.n_inputs, layer.n_neurons))),
                &dw in layer.dweights.as_ref().unwrap()) {
-            *weight_cache_i += (self.rho * *weight_cache_i) + (1.0 - self.rho) * dw * dw;
+            *weight_cache_i = (self.rho * *weight_cache_i) + (1.0 - self.rho) * dw * dw;
             *weight +=  - self.current_learning_rate * dw / (weight_cache_i.sqrt() + self.epsilon);
         });
 
         azip!((mut bias in &mut layer.biases,
                mut bias_cache_i in layer.bias_cache.get_or_insert_with(|| Array1::zeros(layer.n_neurons)),
                &db in layer.dbiases.as_ref().unwrap()) {
-            *bias_cache_i += (self.rho * *bias_cache_i) + (1.0 - self.rho) * db * db;
+            *bias_cache_i = (self.rho * *bias_cache_i) + (1.0 - self.rho) * db * db;
             *bias += -self.current_learning_rate * db / (bias_cache_i.sqrt() + self.epsilon);
         });
     }
