@@ -1,12 +1,21 @@
-use nnfs::{
-    analysis_functions, loss_functions::SoftmaxLossCategoricalCrossEntropy, neurons::LayerDense,
-    optimizer::OptimizerSDG, data::{spiral_data, visualize_nn_scatter},
-};
+use nnfs::ch10::Ch10Args;
 use nnfs_rust as nnfs;
 
-use ndarray::prelude::*;
-use plotters::prelude::*;
+use clap::{Parser, Subcommand};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug, Clone)]
+enum Commands {
+    Ch10(Ch10Args),
+}
 
 fn main() {
-    nnfs::ch10::run();
+    let cli = Cli::parse();
+    dbg!(cli);
 }

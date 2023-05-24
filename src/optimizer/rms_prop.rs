@@ -2,6 +2,8 @@ use ndarray::prelude::*;
 
 use crate::neurons::LayerDense;
 
+use super::Optimizer;
+
 /// RMS Propagation Optimizer
 pub struct OptimizerRMSProp {
     learning_rate: f64,
@@ -17,7 +19,7 @@ pub struct OptimizerRMSPropConfig {
     pub learning_rate: f64,
     pub decay_rate: f64,
     pub epsilon: f64,
-    pub rho: f64
+    pub rho: f64,
 }
 
 impl OptimizerRMSProp {
@@ -32,14 +34,16 @@ impl OptimizerRMSProp {
             rho: optimizer.rho,
         }
     }
+}
+impl Optimizer for OptimizerRMSProp {
     /// Call once before any parameter updates
-    pub fn pre_update_params(&mut self) {
+    fn pre_update_params(&mut self) {
         if self.decay_rate != 0.0 {
             self.current_learning_rate =
                 self.learning_rate / (1.0 + self.decay_rate * self.iterations as f64)
         }
     }
-    pub fn update_params(&self, layer: &mut LayerDense) {
+    fn update_params(&self, layer: &mut LayerDense) {
         azip!((mut weight in &mut layer.weights,
                mut weight_cache_i in layer.weight_cache.get_or_insert_with(|| Array2::zeros((layer.n_inputs, layer.n_neurons))),
                &dw in layer.dweights.as_ref().unwrap()) {
@@ -55,8 +59,12 @@ impl OptimizerRMSProp {
         });
     }
     /// Call once after any parameter updates
-    pub fn post_update_params(&mut self) {
+    fn post_update_params(&mut self) {
         self.iterations += 1;
+    }
+
+    fn current_learning_rate(&self) -> f64 {
+        self.current_learning_rate
     }
 }
 

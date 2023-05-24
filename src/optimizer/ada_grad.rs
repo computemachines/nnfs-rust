@@ -2,6 +2,8 @@ use ndarray::prelude::*;
 
 use crate::neurons::LayerDense;
 
+use super::Optimizer;
+
 /// Adaptive Gradient Optimizer
 pub struct OptimizerAdaGrad {
     learning_rate: f64,
@@ -29,14 +31,16 @@ impl OptimizerAdaGrad {
             epsilon: optimizer.epsilon,
         }
     }
+}
+impl Optimizer for OptimizerAdaGrad {
     /// Call once before any parameter updates
-    pub fn pre_update_params(&mut self) {
+    fn pre_update_params(&mut self) {
         if self.decay_rate != 0.0 {
             self.current_learning_rate =
                 self.learning_rate / (1.0 + self.decay_rate * self.iterations as f64)
         }
     }
-    pub fn update_params(&self, layer: &mut LayerDense) {
+    fn update_params(&self, layer: &mut LayerDense) {
         azip!((mut weight in &mut layer.weights,
                mut weight_cache_i in layer.weight_cache.get_or_insert_with(|| Array2::zeros((layer.n_inputs, layer.n_neurons))),
                &dw in layer.dweights.as_ref().unwrap()) {
@@ -51,9 +55,13 @@ impl OptimizerAdaGrad {
             *bias += -self.current_learning_rate * db / (bias_cache_i.sqrt() + self.epsilon);
         });
     }
-    /// Call once after any parameter updates
-    pub fn post_update_params(&mut self) {
+    /// Call once after all parameters update
+    fn post_update_params(&mut self) {
         self.iterations += 1;
+    }
+
+    fn current_learning_rate(&self) -> f64 {
+        self.current_learning_rate
     }
 }
 

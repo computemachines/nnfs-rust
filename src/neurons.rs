@@ -33,8 +33,6 @@ impl LayerDense {
             n_neurons,
             weights,
             biases,
-            weight_momentums: None,
-            bias_momentums: None,
             ..Default::default()
         }
     }

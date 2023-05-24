@@ -1,6 +1,7 @@
 use ndarray::{prelude::*, Zip};
 use ndarray_rand::rand_distr::num_traits::Pow;
 
+use super::Optimizer;
 use crate::neurons::LayerDense;
 
 pub struct OptimizerSDG {
@@ -29,14 +30,16 @@ impl OptimizerSDG {
             momentum: optimizer.momentum,
         }
     }
+}
+impl Optimizer for OptimizerSDG {
     /// Call once before any parameter updates
-    pub fn pre_update_params(&mut self) {
+    fn pre_update_params(&mut self) {
         if self.decay_rate != 0.0 {
             self.current_learning_rate =
                 self.learning_rate / (1.0 + self.decay_rate * self.iterations as f64)
         }
     }
-    pub fn update_params(&self, layer: &mut LayerDense) {
+    fn update_params(&self, layer: &mut LayerDense) {
         let dweights = layer.dweights.as_ref().unwrap();
         let dbias = layer.dbiases.as_ref().unwrap();
         if self.momentum != 0.0 {
@@ -57,8 +60,12 @@ impl OptimizerSDG {
         }
     }
     /// Call once after any parameter updates
-    pub fn post_update_params(&mut self) {
+    fn post_update_params(&mut self) {
         self.iterations += 1;
+    }
+
+    fn current_learning_rate(&self) -> f64 {
+        self.current_learning_rate
     }
 }
 
