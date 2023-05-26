@@ -2,6 +2,8 @@
 name = "nnfs-rust"
 version = "0.1.0"
 edition = "2021"
+authors = ["Tyler Parker (tparker@computemachines.com)"]
+description = "Following along with Neural Networks From Scratch by ...."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,3 +14,4 @@ ndarray = { version = "0.15.6", features = ["approx-0_5"] }
 ndarray-rand = "0.14.0"
 plotters = "0.3.4"
 rand = "0.8.5"
+seahorse = "2.1.0"

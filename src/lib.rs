@@ -14,6 +14,7 @@ pub mod data;
 pub mod loss_functions;
 pub mod neurons;
 pub mod optimizer;
+pub mod util;
 
 #[macro_use]
 use approx::assert_abs_diff_eq;

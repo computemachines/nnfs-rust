@@ -4,15 +4,24 @@ use crate::{
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::SoftmaxLossCategoricalCrossEntropy,
     neurons::LayerDense,
-    optimizer::{OptimizerSDG, OptimizerSDGConfig, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerRMSProp, OptimizerRMSPropConfig},
+    optimizer::{
+        Optimizer, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerAdam, OptimizerAdamConfig,
+        OptimizerRMSProp, OptimizerRMSPropConfig, OptimizerSDG, OptimizerSDGConfig,
+    },
 };
 
 use approx::AbsDiffEq;
 use ndarray::prelude::*;
 use plotters::prelude::*;
+use seahorse::{Command, Context, Flag, FlagType};
 
-// I'm deviating from the book slightly. Using structs and methods is much nicer.
+// I'm deviating from the book slightly. Using structs and methods is much easier.
 struct NetworkOutput(f64, Array2<f64>);
+
+struct NetworkConfig {
+    pub filename_base: String,
+    pub num_epochs: usize,
+}
 
 #[derive(Clone)]
 struct Network {
@@ -66,42 +75,90 @@ impl Network {
     }
 }
 
-pub fn run() {
-    let num_epochs = 1000;
+pub enum OptimizerTypes {
+    SDG,
+    ADAGrad,
+    RMSProp,
+    AdaM,
+}
+pub fn command() -> Command {
+    Command::new("ch10")
+        .description("Chapter 10 Optimizers")
+        .usage("nnfs-rust ch10 (sdg|adagrad|rmsprop|adam) <hyperparameters> [--help]")
+        .command(
+            Command::new("sdg")
+                .usage("nnfs-rust ch10 sdg <hyperparameters> [--help]")
+                .flag(Flag::new("learning_rate", FlagType::Float).alias("lr"))
+                .flag(Flag::new("decay_rate", FlagType::Float).alias("dr"))
+                .flag(Flag::new("momentum", FlagType::Float).alias("m"))
+                .action(|c| run(OptimizerTypes::SDG, c)),
+        )
+        .command(
+            Command::new("adagrad")
+                .usage("nnfs-rust ch10 sdg <hyperparameters> [--help]")
+                .flag(Flag::new("learning_rate", FlagType::Float).alias("lr"))
+                .flag(Flag::new("decay_rate", FlagType::Float).alias("dr"))
+                .flag(Flag::new("epsilon", FlagType::Float).alias("e"))
+                .action(|c| run(OptimizerTypes::ADAGrad, c)),
+        )
+        .command(
+            Command::new("rmsprop")
+                .usage("nnfs-rust ch10 sdg <hyperparameters> [--help]")
+                .flag(Flag::new("learning_rate", FlagType::Float).alias("lr"))
+                .flag(Flag::new("decay_rate", FlagType::Float).alias("dr"))
+                .flag(Flag::new("epsilon", FlagType::Float).alias("e"))
+                .flag(Flag::new("rho", FlagType::Float).alias("r"))
+        .action(|c| run(OptimizerTypes::RMSProp, c)),
+        )
+        .command(
+            Command::new("adam")
+                .usage("nnfs-rust ch10 sdg <hyperparameters> [--help]")
+                .flag(Flag::new("learning_rate", FlagType::Float).alias("lr"))
+                .flag(Flag::new("decay_rate", FlagType::Float).alias("dr"))
+                .flag(Flag::new("epsilon", FlagType::Float).alias("e"))
+                .flag(Flag::new("beta1", FlagType::Float).alias("b1"))
+                .flag(Flag::new("beta2", FlagType::Float).alias("b2"))
+                .action(|c| run(OptimizerTypes::AdaM, c)),
+        )
+}
+
+fn process_args(optimizer_type: OptimizerTypes, c: &Context) -> (Box<impl Optimizer>, NetworkConfig) {
+    // create optimizer object
+    let config = OptimizerAdamConfig {
+        // learning_rate: 1.0,
+        // decay_rate: 1e-4,
+        // momentum: 0.9,
+        ..Default::default()
+    };
+    let mut optimizer = OptimizerAdam::from(config);
+
+    let config = NetworkConfig {
+        filename_base: format!(
+            "plots/ch10-rms-lr{}-dr{}-e{}-rho{}.gif",
+            config.learning_rate, config.decay_rate, config.epsilon, config.beta_1,
+        ),
+        num_epochs: 1000,
+    };
+    (Box::new(optimizer), config)
+}
+
+pub fn run(optimizer_type: OptimizerTypes, c: &Context) {
     let num_labels = 5;
-    let mut losses1 = Array1::zeros(num_epochs);
-    let mut losses2 = Array1::zeros(num_epochs);
 
     #[allow(non_snake_case)]
     let (data, labels) = spiral_data(100, num_labels);
 
     let mut network = Network::new(num_labels);
 
-    // create optimizer object
-    let config = OptimizerRMSPropConfig {
-        // learning_rate: 1.0,
-        decay_rate: 1e-4,
-        // momentum: 0.9,
-        ..Default::default()
-    };
-    let mut optimizer = OptimizerRMSProp::from(config);
-    // let mut optimizer_other = OptimizerSDG::from(OptimizerSDGConfig {
-    //     learning_rate: 4.0,
-    //     decay_rate: 1e-2,
-    //     ..Default::default()
-    // });
+    let (mut optimizer, config) = process_args(optimizer_type, c);
+    let mut losses1 = Array1::zeros(config.num_epochs);
 
-    let gif_filename = format!(
-        "plots/ch10-rms-lr{}-dr{}-e{}-rho{}.gif", 
-        config.learning_rate, config.decay_rate, config.epsilon, config.rho,
-    );
-    let mut gif = new_root_area(
-        &gif_filename,
-        true,
-    );
+    let gif_path = format!("plots/{}.gif", config.filename_base);
+
+    let mut gif = new_root_area(&gif_path, true);
 
     // train in loop
-    for epoch in 0..num_epochs {
+    for epoch in 0..config.num_epochs {
         // perform a forward pass
         let NetworkOutput(loss, prediction) = network.forward(&data, &labels);
         // let prediction_other = loss_activation_other.output.take().unwrap();
@@ -115,9 +172,10 @@ pub fn run() {
             println!("Epoch: {}", epoch);
             println!("Loss: {}", loss);
             println!("Accuracy: {}", accuracy);
-            println!("Learning rate: {}", optimizer.current_learning_rate);
+            println!("Learning rate: {}", optimizer.current_learning_rate());
 
             println!("Starting gif frame");
+
             let mut network_clone = network.clone();
             visualize_nn_scatter(
                 &data,
@@ -156,31 +214,20 @@ pub fn run() {
         optimizer.update_params(&mut network.dense1);
         optimizer.update_params(&mut network.dense2);
         optimizer.post_update_params();
-
-        // optimizer_other.pre_update_params();
-        // optimizer_other.update_params(&mut dense1_other);
-        // optimizer_other.update_params(&mut dense2_other);
-        // optimizer_other.post_update_params();
     }
 
-    let plot_filename = gif_filename.replace(".gif", ".png");
-    let root = BitMapBackend::new(&plot_filename, (1024 * 2, 768)).into_drawing_area();
-    root.fill(&WHITE).unwrap();
+    let plot_path = format!("plots/{}-loss.png", config.filename_base);
+    let root = BitMapBackend::new(&plot_path, (1024 * 2, 768)).into_drawing_area();
+    // root.fill(&WHITE).unwrap();
 
     let mut chart = ChartBuilder::on(&root)
-        .build_cartesian_2d(0..num_epochs, 0.0..2.0)
+        .build_cartesian_2d(0..config.num_epochs, 0.0..2.0)
         .unwrap();
 
     chart
         .draw_series(LineSeries::new(
             losses1.iter().enumerate().map(|(x, y)| (x, *y)),
             BLACK,
-        ))
-        .unwrap();
-    chart
-        .draw_series(LineSeries::new(
-            losses2.iter().enumerate().map(|(x, y)| (x, *y)),
-            BLUE,
         ))
         .unwrap();
 }
