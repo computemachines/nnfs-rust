@@ -17,5 +17,7 @@ enum Commands {
 
 fn main() {
     let cli = Cli::parse();
-    dbg!(cli);
+    match cli.command {
+        Commands::Ch10(args) => nnfs::ch10::run(args),
+    }
 }

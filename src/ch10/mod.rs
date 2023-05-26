@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use crate::{
     activation_functions::ReLU,
     analysis_functions,
@@ -5,8 +7,9 @@ use crate::{
     loss_functions::SoftmaxLossCategoricalCrossEntropy,
     neurons::LayerDense,
     optimizer::{
-        Optimizer, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerAdam, OptimizerAdamConfig,
-        OptimizerRMSProp, OptimizerRMSPropConfig, OptimizerSDG, OptimizerSDGConfig,
+        self, Optimizer, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerAdam,
+        OptimizerAdamConfig, OptimizerRMSProp, OptimizerRMSPropConfig, OptimizerSDG,
+        OptimizerSDGConfig,
     },
 };
 
@@ -21,32 +24,89 @@ pub use cli::Ch10Args;
 mod network;
 use network::{Network, NetworkOutput};
 
+use self::cli::{SDGCommand, AdamCommand};
+
 struct NetworkConfig {
-    pub filename_base: String,
+    pub output_dir: PathBuf,
+    pub basename: String,
+    pub log_file: PathBuf,
     pub num_epochs: usize,
 }
 
-fn process_args() -> (Box<impl Optimizer>, NetworkConfig) {
+fn process_args(args: &Ch10Args) -> (Box<dyn Optimizer>, NetworkConfig) {
     // create optimizer object
-    let config = OptimizerAdamConfig {
-        // learning_rate: 1.0,
-        // decay_rate: 1e-4,
-        // momentum: 0.9,
-        ..Default::default()
+    let (name, optimizer): (String, Box<dyn Optimizer>) = match args.command {
+        cli::OptimizerCommand::SDG(SDGCommand {
+            learning_rate,
+            decay_rate,
+            momentum,
+        }) => (
+            format!("ch10-sdg-l{}-d{}-m{}", learning_rate, decay_rate, momentum),
+            Box::new(OptimizerSDG::from(OptimizerSDGConfig {
+                learning_rate,
+                decay_rate,
+                momentum,
+            })),
+        ),
+        cli::OptimizerCommand::Adam(AdamCommand {
+            learning_rate,
+            decay_rate,
+            epsilon,
+            beta_1,
+            beta_2,
+        }) => (
+            format!("ch10-adam-l{}-d{}-e{}-b1_{}-b2_{}", learning_rate, decay_rate, epsilon, beta_1, beta_2),
+            Box::new(OptimizerAdam::from(OptimizerAdamConfig {
+                learning_rate,
+                decay_rate,
+                beta_1,
+                beta_2,
+                epsilon,
+            })),
+        ),
+        cli::OptimizerCommand::AdaGrad(
+            cli::AdaGradCommand {
+                learning_rate,
+                epsilon,
+                decay_rate,
+            },
+        ) => (
+            format!("ch10-adagrad-l{}-d{}-e{}", learning_rate, decay_rate, epsilon),
+            Box::new(OptimizerAdaGrad::from(OptimizerAdaGradConfig {
+                learning_rate,
+                epsilon,
+                decay_rate,
+            })),
+        ),
+        cli::OptimizerCommand::RMSProp(
+            cli::RMSPropCommand {
+                learning_rate,
+                epsilon,
+                decay_rate,
+                rho,
+            },
+        ) => (
+            format!("ch10-rms-l{}-d{}-e{}-r{}", learning_rate, decay_rate, epsilon, rho),
+            Box::new(OptimizerRMSProp::from(OptimizerRMSPropConfig {
+                learning_rate,
+                epsilon,
+                decay_rate,
+                rho,
+            })),
+        ),
     };
-    let mut optimizer = OptimizerAdam::from(config);
 
     let config = NetworkConfig {
-        filename_base: format!(
-            "plots/ch10-rms-lr{}-dr{}-e{}-rho{}.gif",
-            config.learning_rate, config.decay_rate, config.epsilon, -1.0,
-        ),
-        num_epochs: 1000,
+        output_dir: args.output_dir.clone(),
+        basename: name,
+        log_file: args.log_file.clone(),
+        num_epochs: args.num_epochs,
     };
-    (Box::new(optimizer), config)
+    (optimizer, config)
 }
 
-pub fn run() {
+pub fn run(args: Ch10Args) {
+    // dbg!(&args);
     let num_labels = 5;
 
     #[allow(non_snake_case)]
@@ -54,10 +114,10 @@ pub fn run() {
 
     let mut network = Network::new(num_labels);
 
-    let (mut optimizer, config) = process_args();
+    let (mut optimizer, config) = process_args(&args);
     let mut losses1 = Array1::zeros(config.num_epochs);
 
-    let gif_path = format!("plots/{}.gif", config.filename_base);
+    let gif_path: String = config.output_dir.join(format!("{}-animation.gif", config.basename)).to_str().unwrap().to_string();
 
     let mut gif = new_root_area(&gif_path, true);
 
@@ -120,8 +180,8 @@ pub fn run() {
         optimizer.post_update_params();
     }
 
-    let plot_path = format!("plots/{}-loss.png", config.filename_base);
-    let root = BitMapBackend::new(&plot_path, (1024 * 2, 768)).into_drawing_area();
+    let loss_plot_path: String = config.output_dir.join(format!("{}-loss.png", config.basename)).to_str().unwrap().to_string();
+    let root = BitMapBackend::new(&loss_plot_path, (1024 * 2, 768)).into_drawing_area();
     // root.fill(&WHITE).unwrap();
 
     let mut chart = ChartBuilder::on(&root)

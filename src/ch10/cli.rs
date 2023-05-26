@@ -1,48 +1,49 @@
-use clap::{Args, arg, Subcommand};
+use std::path::PathBuf;
+
+use clap::{Args, arg, Subcommand, ValueEnum};
 
 #[derive(Args, Debug, Clone)]
 pub struct Ch10Args {
-    #[command(subcommand)]
-    pub cmd: Command,
-}
+    #[arg(value_enum, default_value_t = ReportMode::LossOnly)]
+    pub mode: ReportMode,
+    #[arg(long, short, default_value = "plots/")]
+    pub output_dir: PathBuf,
 
-#[derive(Subcommand, Debug, Clone)]
-pub enum Command {
-    #[clap(name = "animate")]
-    Animate(AnimateArgs),
+    /// The percentage of epochs to render to the gif
+    #[arg(long, short, default_value_t = 1.0)]
+    pub render_frame_fraction: f64,
 
-    #[clap(name = "loss-only")]
-    LossOnly(LossOnlyArgs),
-}
+    /// The gif frame rate (frames per second)
+    #[arg(long, short, default_value_t = 10.0)]
+    pub frame_rate: f64,
 
-#[derive(Args, Debug, Clone)]
-pub struct AnimateArgs {
-    #[clap(short, long, default_value_t = 0)]
-    pub skip_frame: u32,
+    /// Total number of training epochs
+    #[arg(long, short, default_value_t = 10000)]
+    pub num_epochs: usize,
 
-    #[command(subcommand)]
-    pub optimizer: OptimizerCommand,
-}
-
-#[derive(Args, Debug, Clone)]
-pub struct LossOnlyArgs {
-    #[clap(short, long, required = true)]
-    pub output_dir: String,
+    /// Final loss/accuracy value log file
+    #[arg(long, short, default_value = "report.log")]
+    pub log_file: PathBuf,
 
     #[command(subcommand)]
-    pub optimizer: OptimizerCommand,
+    pub command: OptimizerCommand
 }
 
+#[derive(ValueEnum, Debug, Clone)]
+pub enum ReportMode {
+    Animate,
+    LossOnly,
+}
 
 #[derive(Subcommand, Debug, Clone)]
 pub enum OptimizerCommand {
-    #[clap(name = "sdg", about = "SDG optimizer")]
+    #[command(about = "SDG optimizer")]
     SDG(SDGCommand),
-    #[clap(name = "adam", about = "Adam optimizer")]
+    #[command(about = "Adam optimizer")]
     Adam(AdamCommand),
-    #[clap(name = "adagrad", about = "AdaGrad optimizer")]
+    #[command(name="adagrad", about = "AdaGrad optimizer")]
     AdaGrad(AdaGradCommand),
-    #[clap(name = "rmsprop", about = "RMSProp optimizer")]
+    #[command(name="rmsprop", about = "RMSProp optimizer")]
     RMSProp(RMSPropCommand),
 }
 
@@ -58,10 +59,12 @@ pub struct SDGCommand {
 
 #[derive(Args, Debug, Clone)]
 pub struct AdamCommand {
-    #[clap(short, long, default_value = "0.001")]
+    #[arg(short, long, default_value = "0.001")]
     pub learning_rate: f64,
-    #[clap(short, long, default_value = "0.0")]
+    #[arg(short, long, default_value = "0.0")]
     pub decay_rate: f64,
+    #[arg(short, long, default_value = "1e-7")]
+    pub epsilon: f64,
     #[arg(long, default_value = "0.9")]
     pub beta_1: f64,
     #[arg(long, default_value = "0.999")]
@@ -70,18 +73,22 @@ pub struct AdamCommand {
 
 #[derive(Args, Debug, Clone)]
 pub struct AdaGradCommand {
-    #[clap(short, long, default_value = "0.01")]
+    #[arg(short, long, default_value = "1.0")]
     pub learning_rate: f64,
-    #[clap(short, long, default_value = "0.0")]
+    #[arg(short, long, default_value = "0.0")]
     pub epsilon: f64,
+    #[arg(short, long, default_value = "1e-7")]
+    pub decay_rate: f64,
 }
 
 #[derive(Args, Debug, Clone)]
 pub struct RMSPropCommand {
-    #[clap(short, long, default_value = "0.001")]
+    #[clap(short, long, default_value = "1.0")]
     pub learning_rate: f64,
-    #[clap(short, long, default_value = "0.9")]
+    #[clap(short, long, default_value = "0")]
     pub decay_rate: f64,
-    #[clap(short, long, default_value = "1e-8")]
+    #[clap(short, long, default_value = "1e-7")]
     pub epsilon: f64,
+    #[clap(short, long, default_value = "1e-3")]
+    pub rho: f64,
 }
