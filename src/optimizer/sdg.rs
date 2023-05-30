@@ -57,6 +57,15 @@ impl Optimizer for OptimizerSDG {
                 *bias += -self.current_learning_rate * db;
                 *bias_momentum = bias_update;
             });
+        } else {
+            azip!((weight in &mut layer.weights,
+                   &dw in dweights) {
+                *weight += -self.current_learning_rate * dw;
+            });
+            azip!((bias in &mut layer.biases,
+                   &db in dbias) {
+                *bias += -self.current_learning_rate * db;
+            });
         }
     }
     /// Call once after any parameter updates
