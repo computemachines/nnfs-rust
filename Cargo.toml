@@ -9,7 +9,9 @@ edition = "2021"
 approx = "0.5.1"
 clap = { version = "4.3.0", features = ["derive"] }
 colorgrad = "0.6.2"
+csv = "1.2.1"
 ndarray = { version = "0.15.6", features = ["approx-0_5"] }
 ndarray-rand = "0.14.0"
 plotters = "0.3.4"
 rand = "0.8.5"
+serde = { version = "1.0.163", features = ["derive"] }

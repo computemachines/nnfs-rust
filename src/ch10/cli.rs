@@ -29,7 +29,7 @@ pub struct Ch10Args {
     pub command: OptimizerCommand
 }
 
-#[derive(ValueEnum, Debug, Clone)]
+#[derive(ValueEnum, Debug, Clone, PartialEq)]
 pub enum ReportMode {
     Animate,
     LossOnly,
