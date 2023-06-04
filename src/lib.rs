@@ -1,12 +1,13 @@
 #![allow(dead_code, unused)]
 
-pub mod ch10;
 pub mod ch2;
 pub mod ch3;
 pub mod ch4;
 pub mod ch5;
 pub mod ch6;
 pub mod ch9;
+pub mod ch10;
+pub mod ch11;
 
 pub mod activation_functions;
 pub mod analysis_functions;
@@ -76,18 +77,18 @@ mod tests {
 
     #[test]
     fn test_dense_2x2_forward() {
-        let X = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
+        let x = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
         let y = array![0, 0, 1];
 
-        let N = 100000;
-        let mut losses = Array1::zeros(N);
+        let n = 100000;
+        let mut losses = Array1::zeros(n);
 
-        for idx in 0..N {
+        for idx in 0..n {
             let mut dense1 = LayerDense::new(2, 2);
             let mut loss_activation = SoftmaxLossCategoricalCrossEntropy::new();
 
             // forward
-            dense1.forward(&X);
+            dense1.forward(&x);
             // dbg!(&dense1.output.as_ref().unwrap());
             let loss = loss_activation.forward_labels(dense1.output.as_ref().unwrap(), &y);
             losses[idx] = loss;
@@ -104,10 +105,10 @@ mod tests {
 
     #[test]
     fn test_dense_2x2_backward() {
-        let X = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
+        let x = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
         let y = array![0, 0, 1];
 
-        let N = 100000;
-        let mut losses: Array1<f64> = Array1::zeros(N);
+        let n = 100000;
+        let mut losses: Array1<f64> = Array1::zeros(n);
     }
 }

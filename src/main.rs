@@ -1,4 +1,5 @@
 use nnfs::ch10::Ch10Args;
+use nnfs::ch11::Ch11Args;
 use nnfs_rust as nnfs;
 
 use clap::{Parser, Subcommand};
@@ -13,11 +14,13 @@ struct Cli {
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
     Ch10(Ch10Args),
+    Ch11(Ch11Args),
 }
 
 fn main() {
     let cli = Cli::parse();
     match cli.command {
         Commands::Ch10(args) => nnfs::ch10::run(args),
+        Commands::Ch11(args) => nnfs::ch11::run(args),
     }
 }

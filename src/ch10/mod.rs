@@ -165,14 +165,14 @@ pub fn run(args: Ch10Args) {
         });
 
         if epoch % 1 == 0 {
-            println!("Epoch: {}", epoch);
-            println!("Loss: {}", loss);
-            println!("Accuracy: {}", accuracy);
-            println!("Learning rate: {}", optimizer.current_learning_rate());
-
+            println!(
+                "epoch: {}, loss: {:.3}, acc: {:.3}, lr: {:.3}",
+                epoch,
+                loss,
+                accuracy,
+                optimizer.current_learning_rate()
+            );
             if args.mode == ReportMode::Animate {
-                println!("Starting gif frame");
-
                 let mut network_clone = network.clone();
                 visualize_nn_scatter(
                     &data,
@@ -198,9 +198,8 @@ pub fn run(args: Ch10Args) {
                         )
                         .to_rgba()
                     },
-                    gif.as_ref().unwrap()
+                    gif.as_ref().unwrap(),
                 );
-                println!("Done gif frame.");
             }
         }
 
