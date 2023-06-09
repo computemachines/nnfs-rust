@@ -1,6 +1,6 @@
 use ndarray::{prelude::*, Zip};
 
-use crate::activation_functions;
+use crate::{activation_functions, neurons::LayerDense};
 
 pub trait Loss<T> {
     fn calculate(&self, output: &Array2<f64>, y: &T) -> f64 {
@@ -17,9 +17,34 @@ pub trait Loss<T> {
     fn backward(&mut self, dvalues: &Array2<f64>, y_true: &T);
 }
 
-#[derive(Default, Clone)]
+pub(crate) fn regularization_loss(layer: &LayerDense) -> f64 {
+    let mut reg_loss: f64 = 0.;
+
+    // L1 regularization - weights
+    // if layer.weight_regularizer_l1 > 0. {
+        reg_loss +=
+            (layer.weight_regularizer_l1+1.0/128.) * layer.weights.iter().map(|w| w.abs()).sum::<f64>();
+    // }
+    // L2 regularization - weights
+    // if layer.weight_regularizer_l2 > 0. {
+        reg_loss +=
+            layer.weight_regularizer_l2 * layer.weights.iter().map(|w| w.powi(2)).sum::<f64>();
+    // }
+
+    // L1 regularization - biases
+    // if layer.bias_regularizer_l1 > 0. {
+        reg_loss += (layer.bias_regularizer_l1+1.0/128.) * layer.biases.iter().map(|b| b.abs()).sum::<f64>();
+    // }
+    // L2 regularization - biases
+    // if layer.bias_regularizer_l2 > 0. {
+        reg_loss += layer.bias_regularizer_l2 * layer.biases.iter().map(|b| b.powi(2)).sum::<f64>();
+    // }
+
+    reg_loss
+}
+
+#[derive(Default, Clone, Debug)]
 pub struct LossCategoricalCrossentropy {
-    pub output: Option<Array2<f64>>,
     pub dinputs: Option<Array2<f64>>,
 }
 
@@ -76,6 +101,8 @@ impl Loss<Array2<f64>> for LossCategoricalCrossentropy {
         correct_confidences.mapv(|x| -x.ln())
     }
     fn backward(&mut self, dvalues: &Array2<f64>, y_true: &Array2<f64>) {
+        // println!("loss.backward dvalues: {:#?}", dvalues);
+        // println!("loss.backward y_true: {:#?}", y_true);
         // number of samples
         let samples = dvalues.shape()[0];
 
@@ -169,6 +196,9 @@ impl SoftmaxLossCategoricalCrossEntropy {
             row[label] -= 1.;
             row /= samples; // Normalize gradient
         });
+
+        // // TESTING ONLY - REMOVE
+        // self.dinputs = Some(Array2::ones([dvalues.shape()[0], dvalues.shape()[1]]));
     }
 }
 

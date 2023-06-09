@@ -2,7 +2,7 @@ use std::mem::MaybeUninit;
 
 use ndarray::{prelude::*, Zip};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct ReLU {
     pub output: Option<Array2<f64>>,
     pub inputs: Option<Array2<f64>>,
@@ -41,7 +41,7 @@ impl ReLU {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct Softmax {
     pub output: Option<Array2<f64>>,
     pub inputs: Option<Array2<f64>>,

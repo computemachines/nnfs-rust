@@ -1,13 +1,19 @@
-use ndarray::prelude::*;
+use ndarray::{prelude::*, Zip};
 use ndarray_rand::{rand_distr::Normal, RandomExt};
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct LayerDense {
     pub n_inputs: usize,
     pub n_neurons: usize,
 
     pub weights: Array2<f64>,
     pub biases: Array1<f64>,
+
+    // Chapter 14
+    pub weight_regularizer_l1: f64,
+    pub weight_regularizer_l2: f64,
+    pub bias_regularizer_l1: f64,
+    pub bias_regularizer_l2: f64,
 
     // following values: Option<_> is used for uninitialized value
     pub output: Option<Array2<f64>>,
@@ -26,7 +32,8 @@ pub struct LayerDense {
 
 impl LayerDense {
     pub fn new(n_inputs: usize, n_neurons: usize) -> Self {
-        let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.01).unwrap());
+        // let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 1.01).unwrap());
+        let weights = Array2::ones((n_inputs, n_neurons));
         let biases = Array1::zeros(n_neurons);
         Self {
             n_inputs,
@@ -44,6 +51,42 @@ impl LayerDense {
         // gradients on parameters
         self.dweights = Some(self.inputs.as_ref().unwrap().t().dot(dvalues));
         self.dbiases = Some(dvalues.sum_axis(Axis(0)));
+
+        // the borrow checker :(
+        let weight_regularizer_l1 = self.weight_regularizer_l1;
+        let weight_regularizer_l2 = self.weight_regularizer_l2;
+        let bias_regularizer_l1 = self.bias_regularizer_l1;
+        let bias_regularizer_l2 = self.bias_regularizer_l2;
+
+        // gradients on regularization
+        if self.weight_regularizer_l1 > 0. {
+            azip!((
+                mut dw in self.dweights.as_mut().unwrap(), 
+                &w in &self.weights) {
+                    *dw += if w > 0. { 1. } else { -1. } * weight_regularizer_l1;
+            });
+        }
+        if self.weight_regularizer_l2 > 0. {
+            azip!((
+                mut dw in self.dweights.as_mut().unwrap(), 
+                &w in &self.weights) {
+                    *dw += w * weight_regularizer_l2 * 2.;
+            });
+        }
+        if self.bias_regularizer_l1 > 0. {
+            azip!((
+                mut db in self.dbiases.as_mut().unwrap(), 
+                &b in &self.biases) {
+                    *db += if b > 0. { 1. } else { -1. } * bias_regularizer_l1;
+            });
+        }
+        if self.bias_regularizer_l2 > 0. {
+            azip!((
+                mut db in self.dbiases.as_mut().unwrap(), 
+                &b in &self.biases) {
+                    *db += b * bias_regularizer_l2 * 2.;
+            });
+        }
 
         // gradients on values
         self.dinputs = Some(dvalues.dot(&self.weights.t()));

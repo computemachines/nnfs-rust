@@ -8,6 +8,7 @@ pub mod ch6;
 pub mod ch9;
 pub mod ch10;
 pub mod ch11;
+pub mod ch14;
 
 pub mod activation_functions;
 pub mod analysis_functions;
