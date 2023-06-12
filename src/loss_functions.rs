@@ -17,28 +17,28 @@ pub trait Loss<T> {
     fn backward(&mut self, dvalues: &Array2<f64>, y_true: &T);
 }
 
-pub(crate) fn regularization_loss(layer: &LayerDense) -> f64 {
+pub fn regularization_loss(layer: &LayerDense) -> f64 {
     let mut reg_loss: f64 = 0.;
 
     // L1 regularization - weights
-    // if layer.weight_regularizer_l1 > 0. {
+    if layer.weight_regularizer_l1 > 0. {
         reg_loss +=
-            (layer.weight_regularizer_l1+1.0/128.) * layer.weights.iter().map(|w| w.abs()).sum::<f64>();
-    // }
+            (layer.weight_regularizer_l1) * layer.weights.iter().map(|w| w.abs()).sum::<f64>();
+    }
     // L2 regularization - weights
-    // if layer.weight_regularizer_l2 > 0. {
+    if layer.weight_regularizer_l2 > 0. {
         reg_loss +=
             layer.weight_regularizer_l2 * layer.weights.iter().map(|w| w.powi(2)).sum::<f64>();
-    // }
+    }
 
     // L1 regularization - biases
-    // if layer.bias_regularizer_l1 > 0. {
-        reg_loss += (layer.bias_regularizer_l1+1.0/128.) * layer.biases.iter().map(|b| b.abs()).sum::<f64>();
-    // }
+    if layer.bias_regularizer_l1 > 0. {
+        reg_loss += (layer.bias_regularizer_l1) * layer.biases.iter().map(|b| b.abs()).sum::<f64>();
+    }
     // L2 regularization - biases
-    // if layer.bias_regularizer_l2 > 0. {
+    if layer.bias_regularizer_l2 > 0. {
         reg_loss += layer.bias_regularizer_l2 * layer.biases.iter().map(|b| b.powi(2)).sum::<f64>();
-    // }
+    }
 
     reg_loss
 }

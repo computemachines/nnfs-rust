@@ -1,3 +1,9 @@
+# Chapter 15
+Dropout
+![Training Forward Run Visualization](/plots/ch15-adam-2x64-l0.05-d0.0000005-e0.0000001-b1_0.9-b2_0.999-animation.gif)
+```shell
+$ cargo run -- ch15 -n 10000 --l2reg 1e-5 --dropout 0.1 loss-only adam
+```
 # Chapter 14
 Regularization
 ```shell
