@@ -8,28 +8,29 @@ use plotters::{coord::Shift, prelude::*, style::full_palette::BLUEGREY};
 
 use crate::neurons::LayerDense;
 
-pub fn spiral_data(n: usize, k: usize) -> (Array2<f64>, Array1<usize>) {
+pub fn spiral_data(samples: usize, classes: usize) -> (Array2<f64>, Array1<usize>) {
     let d: usize = 2;
-    let mut data = Array::zeros((n * k, d));
-    let mut labels = Array::zeros(n * k);
-    for class in 0..k {
-        // indexes chunked by the current class
-        let ix = (class * n)..((class + 1) * n);
+    let mut data = Array::zeros((samples * classes, d));
+    let mut labels = Array::zeros(samples * classes);
 
-        let radius: Array1<f64> = Array::linspace(0.0, 1.0, n);
-        let theta: Array1<f64> = Array::linspace(class as f64 * 4.0, (class + 1) as f64 * 4.0, n);
-        let jitter: Array1<f64> = Array::random(n, Normal::new(0.0, 0.2).unwrap());
-
-        let theta = theta + jitter;
+    for class_number in 0..classes {
+        let ix = (samples * class_number)..(samples * (class_number + 1));
+        let r = Array::linspace(0.0, 1.0, samples);
+        let t = Array::linspace(
+            (class_number as f64) * 4.0,
+            ((class_number + 1) as f64) * 4.0,
+            samples,
+        ) + &Array::random(samples, Normal::new(0.0, 0.2).unwrap());
 
         data.slice_mut(s![ix.clone(), 0])
-            .assign(&(&radius * &theta.mapv(f64::cos)));
+            .assign(&(r.clone() * &(&t * 2.5).mapv(f64::sin)));
         data.slice_mut(s![ix.clone(), 1])
-            .assign(&(&radius * &theta.mapv(f64::sin)));
+            .assign(&(r * &(&t * 2.5).mapv(f64::cos)));
 
-        labels.slice_mut(s![ix]).fill(class);
+        labels.slice_mut(s![ix]).fill(class_number);
     }
-    (data, labels)
+
+    (data, labels.mapv(|x| x as usize))
 }
 
 pub fn vertical_data(n: usize, k: usize) -> (Array2<f64>, Array1<usize>) {
@@ -156,10 +157,12 @@ pub fn visualize_nn_scatter<'a>(
     //     BLACK,
     // ];
     let g = colorgrad::rainbow();
-    let colors: Vec<RGBAColor> =
-        (0..max_label).map(|i| {
+    let colors: Vec<RGBAColor> = (0..max_label)
+        .map(|i| {
             let c = g.at(i as f64 / max_label as f64).to_rgba8();
-            RGBAColor(c[0], c[1], c[2], c[3] as f64 / 256.0)}).collect();
+            RGBAColor(c[0], c[1], c[2], c[3] as f64 / 256.0)
+        })
+        .collect();
 
     let area = ctx.plotting_area();
     let pixel_range = area.get_pixel_range();
