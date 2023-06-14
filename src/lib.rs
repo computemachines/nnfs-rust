@@ -10,6 +10,7 @@ pub mod ch10;
 pub mod ch11;
 pub mod ch14;
 pub mod ch15;
+pub mod ch16;
 
 pub mod activation_functions;
 pub mod analysis_functions;
@@ -37,7 +38,7 @@ pub fn show_data() {
 #[cfg(test)]
 mod tests {
     use crate::{
-        activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossEntropy,
+        activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossentropy,
         neurons::LayerDense,
     };
 
@@ -87,7 +88,7 @@ mod tests {
 
         for idx in 0..n {
             let mut dense1 = LayerDense::new(2, 2);
-            let mut loss_activation = SoftmaxLossCategoricalCrossEntropy::new();
+            let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
 
             // forward
             dense1.forward(&x);

@@ -1,3 +1,17 @@
+# Chapter 16
+Binary Logistic Regression
+```shell
+$ cargo run -- ch16 loss-only adam -l 0.01 -d 5e-7
+...
+Epoch: 9800,
+Data Loss: 0.920, Regularization Loss: 1.082, Accuracy: 0.870,
+Test Data Loss: 1.319, Test Accuracy: 0.800
+
+Epoch: 9900,
+Data Loss: 0.937, Regularization Loss: 1.132, Accuracy: 0.870,
+Test Data Loss: 1.358, Test Accuracy: 0.795
+```
+
 # Chapter 15
 Dropout
 ![Training Forward Run Visualization](/plots/ch15-adam-2x64-l0.05-d0.0000005-e0.0000001-b1_0.9-b2_0.999-animation.gif)

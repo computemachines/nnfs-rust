@@ -8,19 +8,19 @@ use plotters::{coord::Shift, prelude::*, style::full_palette::BLUEGREY};
 
 use crate::neurons::LayerDense;
 
-pub fn spiral_data(samples: usize, classes: usize) -> (Array2<f64>, Array1<usize>) {
+pub fn spiral_data(samples_per_class: usize, classes: usize) -> (Array2<f64>, Array1<usize>) {
     let d: usize = 2;
-    let mut data = Array::zeros((samples * classes, d));
-    let mut labels = Array::zeros(samples * classes);
+    let mut data = Array::zeros((samples_per_class * classes, d));
+    let mut labels = Array::zeros(samples_per_class * classes);
 
     for class_number in 0..classes {
-        let ix = (samples * class_number)..(samples * (class_number + 1));
-        let r = Array::linspace(0.0, 1.0, samples);
+        let ix = (samples_per_class * class_number)..(samples_per_class * (class_number + 1));
+        let r = Array::linspace(0.0, 1.0, samples_per_class);
         let t = Array::linspace(
             (class_number as f64) * 4.0,
             ((class_number + 1) as f64) * 4.0,
-            samples,
-        ) + &Array::random(samples, Normal::new(0.0, 0.2).unwrap());
+            samples_per_class,
+        ) + &Array::random(samples_per_class, Normal::new(0.0, 0.2).unwrap());
 
         data.slice_mut(s![ix.clone(), 0])
             .assign(&(r.clone() * &(&t * 2.5).mapv(f64::sin)));

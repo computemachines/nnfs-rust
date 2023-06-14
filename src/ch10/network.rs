@@ -1,14 +1,14 @@
 
 use ndarray::prelude::*;
 
-use crate::{neurons::LayerDense, activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossEntropy};
+use crate::{neurons::LayerDense, activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossentropy};
 
 #[derive(Clone)]
 pub struct Network {
     pub dense1: LayerDense,
     pub dense2: LayerDense,
     pub activation1: ReLU,
-    pub loss_activation: SoftmaxLossCategoricalCrossEntropy,
+    pub loss_activation: SoftmaxLossCategoricalCrossentropy,
 }
 pub struct NetworkOutput(pub f64, pub Array2<f64>);
 
@@ -25,7 +25,7 @@ impl Network {
         let mut dense2 = LayerDense::new(64, num_labels);
 
         // create softmax classifier with combined loss and activation
-        let mut loss_activation = SoftmaxLossCategoricalCrossEntropy::new();
+        let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
 
         Self {
             dense1,

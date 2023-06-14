@@ -1,4 +1,5 @@
 use ndarray::{prelude::*, Zip};
+use rand::seq::index::sample;
 
 use crate::{activation_functions, neurons::LayerDense};
 
@@ -114,10 +115,61 @@ impl Loss<Array2<f64>> for LossCategoricalCrossentropy {
     }
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct BinaryCrossentropy {
+    pub dinputs: Option<Array2<f64>>,
+}
+
+impl BinaryCrossentropy {
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
+// Overloading is an ugly hack, but I am trying to follow the book as closely as possible while keeping the code statically typed
+/// Handle the case where y_true is a list of cataegorical labels
+impl Loss<Array2<f64>> for BinaryCrossentropy {
+    fn forward(&self, y_pred: &Array2<f64>, y_true: &Array2<f64>) -> Array1<f64> {
+        // Clip data to prevent division by 0
+        // Clip both sides to not drag mean towards any value
+        let y_pred_clipped = y_pred.mapv(|x| x.max(1e-7).min(1. - 1e-7));
+
+        // Unfortunately, ln() does not broadcast so we have to do this manually
+        let sample_losses =
+            Zip::from(&y_pred_clipped)
+                .and(y_true)
+                .map_collect(|y_pred_clipped_el, y_true_el| {
+                    -(y_true_el * y_pred_clipped_el.ln()
+                        + (1. - y_true_el) * (1. - y_pred_clipped_el).ln())
+                });
+        sample_losses.sum_axis(Axis(1)) / y_pred.shape()[1] as f64
+    }
+
+    fn backward(&mut self, dvalues: &Array2<f64>, y_true: &Array2<f64>) {
+        // Number of samples
+        let samples = dvalues.shape()[0];
+
+        // Number of outputs in every sample
+        let outputs = dvalues.shape()[1];
+
+        // Clip data to prevent division by 0
+        // Clip both sides to not drag mean towards any value
+        let clipped_dvalues = dvalues.mapv(|x| x.max(1e-7).min(1. - 1e-7));
+
+        // Calculate gradient
+        self.dinputs = Some(
+            -(y_true / &clipped_dvalues - (1. - y_true) / (1. - &clipped_dvalues)) / outputs as f64,
+        );
+
+        // Normalize gradient
+        self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
+    }
+}
+
 /// Softmax classifier - combined Softmax activation and cross-entropy loss for
 /// faster backward step
 #[derive(Clone)]
-pub struct SoftmaxLossCategoricalCrossEntropy {
+pub struct SoftmaxLossCategoricalCrossentropy {
     pub activation: activation_functions::Softmax,
     pub loss: LossCategoricalCrossentropy,
     pub output: Option<Array2<f64>>,
@@ -127,7 +179,7 @@ pub struct SoftmaxLossCategoricalCrossEntropy {
 // I gave up on overloading, it is too complicated. I could have used an enum
 // then do runtime checking but that would be a small performance hit just to
 // make the code look like the book
-impl SoftmaxLossCategoricalCrossEntropy {
+impl SoftmaxLossCategoricalCrossentropy {
     /// Creates activation and loss function objects
     pub fn new() -> Self {
         Self {

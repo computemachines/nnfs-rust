@@ -83,6 +83,34 @@ impl Softmax {
     }
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct Sigmoid {
+    pub output: Option<Array2<f64>>,
+    pub inputs: Option<Array2<f64>>,
+    pub dinputs: Option<Array2<f64>>,
+}
+impl Sigmoid {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn forward(&mut self, inputs: &Array2<f64>) {
+        self.inputs = Some(inputs.clone());
+        self.output = Some(inputs.map(|x| 1. / (1. + (-x).exp())));
+    }
+
+    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+        self.dinputs = Some(Array2::zeros(dvalues.raw_dim()));
+        azip!((
+            mut dinput in self.dinputs.as_mut().unwrap(),
+            &dvalue in dvalues,
+            &output_value in self.output.as_ref().unwrap(),
+        ) {
+            *dinput = dvalue * (1. - output_value) * output_value;
+        });
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -3,7 +3,7 @@ use serde::__private::de;
 
 use crate::{
     activation_functions::ReLU, loss_functions,
-    loss_functions::SoftmaxLossCategoricalCrossEntropy, neurons::LayerDense,
+    loss_functions::SoftmaxLossCategoricalCrossentropy, neurons::LayerDense,
 };
 
 #[derive(Clone)]
@@ -11,7 +11,7 @@ pub struct Network {
     pub dense1: LayerDense,
     pub dense2: LayerDense,
     pub activation1: ReLU,
-    pub loss_activation: SoftmaxLossCategoricalCrossEntropy,
+    pub loss_activation: SoftmaxLossCategoricalCrossentropy,
 }
 pub struct NetworkOutput(pub f64, pub f64, pub Array2<f64>);
 
@@ -32,7 +32,7 @@ impl Network {
         // dense2.bias_regularizer_l2 = l2reg;
 
         // create softmax classifier with combined loss and activation
-        let mut loss_activation = SoftmaxLossCategoricalCrossEntropy::new();
+        let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
 
         Self {
             dense1,

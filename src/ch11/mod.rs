@@ -4,7 +4,7 @@ use crate::{
     activation_functions::ReLU,
     analysis_functions,
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
-    loss_functions::SoftmaxLossCategoricalCrossEntropy,
+    loss_functions::SoftmaxLossCategoricalCrossentropy,
     neurons::LayerDense,
     optimizer::{
         self, Optimizer, OptimizerAdaGrad, OptimizerAdaGradConfig, OptimizerAdam,

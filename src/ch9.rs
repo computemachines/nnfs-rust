@@ -8,7 +8,7 @@ use rand::distributions::Uniform;
 
 use crate::activation_functions::{Softmax, ReLU};
 use crate::data::spiral_data;
-use crate::loss_functions::{Loss, LossCategoricalCrossentropy, SoftmaxLossCategoricalCrossEntropy};
+use crate::loss_functions::{Loss, LossCategoricalCrossentropy, SoftmaxLossCategoricalCrossentropy};
 use crate::neurons::LayerDense;
 
 pub fn run() {
@@ -232,7 +232,7 @@ pub fn softmax_catagorical_cross_entropy_combined_test() {
     let class_targets = array![0, 1, 1];
 
     let start = Instant::now();
-    let mut softmax_loss = SoftmaxLossCategoricalCrossEntropy::new();
+    let mut softmax_loss = SoftmaxLossCategoricalCrossentropy::new();
     softmax_loss.backward_labels(&softmax_outputs, &class_targets);
     let dvalues1 = softmax_loss.dinputs.unwrap().clone();
     let elapsed1 = start.elapsed();
@@ -270,7 +270,7 @@ pub fn full_model_code() {
     let mut dense2 = LayerDense::new(3, 3);
 
     // Create Softmax classifier's combined loss and activation
-    let mut loss_activation = SoftmaxLossCategoricalCrossEntropy::new();
+    let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
 
     // perform forward pass of training data through this layer
     dense1.forward(&X);
