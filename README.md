@@ -1,3 +1,14 @@
+# Chapter 17
+Regression
+- Requires at least 2 nonlinear activation layers
+- Very sensitive to initial weights
+- Different activation functions call for different weight initialization strategies
+- I struggled to get good training results. 
+```shell
+
+```
+![Prediction vs Training Sine Data](/plots/ch17-sine-prediction-vs-training.png)
+
 # Chapter 16
 Binary Logistic Regression
 ```shell

@@ -166,6 +166,71 @@ impl Loss<Array2<f64>> for BinaryCrossentropy {
     }
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct MeanSquaredError {
+    pub dinputs: Option<Array2<f64>>,
+}
+
+impl MeanSquaredError {
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
+impl Loss<Array2<f64>> for MeanSquaredError {
+    fn forward(&self, y_pred: &Array2<f64>, y_true: &Array2<f64>) -> Array1<f64> {
+        let sample_losses = (y_true - y_pred).mapv(|x| x.powi(2)).sum_axis(Axis(1));
+        sample_losses / y_pred.shape()[1] as f64
+    }
+
+    fn backward(&mut self, dvalues: &Array2<f64>, y_true: &Array2<f64>) {
+        // Number of samples
+        let samples = dvalues.shape()[0];
+
+        // Number of outputs in every sample
+        let outputs = dvalues.shape()[1];
+
+        // Gradient on values
+        self.dinputs = Some(-2. / outputs as f64 * (y_true - dvalues));
+
+        // Normalize gradient
+        self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
+    }
+}
+
+#[derive(Default, Clone, Debug)]
+pub struct MeanAbsoluteError {
+    pub dinputs: Option<Array2<f64>>,
+}
+
+impl MeanAbsoluteError {
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
+
+impl Loss<Array2<f64>> for MeanAbsoluteError {
+    fn forward(&self, y_pred: &Array2<f64>, y_true: &Array2<f64>) -> Array1<f64> {
+        let sample_losses = (y_true - y_pred).mapv(|x| x.abs()).sum_axis(Axis(1));
+        sample_losses / y_pred.shape()[1] as f64
+    }
+
+    fn backward(&mut self, dvalues: &Array2<f64>, y_true: &Array2<f64>) {
+        // Number of samples
+        let samples = dvalues.shape()[0];
+
+        // Number of outputs in every sample
+        let outputs = dvalues.shape()[1];
+
+        // Gradient on values
+        self.dinputs = Some(-1. / outputs as f64 * (y_true - dvalues).mapv(|x| x.signum()));
+
+        // Normalize gradient
+        self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
+    }
+}
+
+
 /// Softmax classifier - combined Softmax activation and cross-entropy loss for
 /// faster backward step
 #[derive(Clone)]

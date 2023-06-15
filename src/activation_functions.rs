@@ -111,6 +111,28 @@ impl Sigmoid {
     }
 }
 
+#[derive(Default, Clone, Debug)]
+pub struct Linear {
+    pub output: Option<Array2<f64>>,
+    pub inputs: Option<Array2<f64>>,
+    pub dinputs: Option<Array2<f64>>,
+}
+
+impl Linear {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn forward(&mut self, inputs: &Array2<f64>) {
+        self.inputs = Some(inputs.clone());
+        self.output = Some(inputs.clone());
+    }
+
+    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+        self.dinputs = Some(dvalues.clone());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

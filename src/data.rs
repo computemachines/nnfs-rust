@@ -4,6 +4,7 @@ use colorgrad;
 /// The source of data for the NNFS book.
 use ndarray::{iter::Lanes, s, Array, Array1, Array2};
 use ndarray_rand::{rand_distr::Normal, RandomExt};
+use plotpy::{Curve, Plot};
 use plotters::{coord::Shift, prelude::*, style::full_palette::BLUEGREY};
 
 use crate::neurons::LayerDense;
@@ -61,6 +62,15 @@ pub fn vertical_data(n: usize, k: usize) -> (Array2<f64>, Array1<usize>) {
     }
 
     (data, labels)
+}
+
+pub fn sine_data(samples: usize) -> (Array2<f64>, Array2<f64>) {
+    let data = Array::linspace(0.0, 1.0, samples)
+        .into_shape((samples, 1))
+        .unwrap();
+    let y = (&data * 2.0 * std::f64::consts::PI).mapv(|v| v.sin());
+
+    (data, y)
 }
 
 pub fn plot_scatter(data: &Array2<f64>, labels: &Array1<usize>, filename: &str) {
@@ -192,4 +202,16 @@ pub fn visualize_nn_scatter<'a>(
     )
     .unwrap();
     root_area.present().unwrap();
+}
+
+pub fn plot_regression_data(x: &[f64], y_pred: &[f64], y_true: &[f64], filename: &str) {
+    let mut target = Curve::new();
+    target.draw(&x, &y_true);
+    target.set_line_style("--");
+    let mut prediction = Curve::new();
+    prediction.draw(&x, &y_pred);
+    let mut plot = Plot::new();
+    plot.add(&target);
+    plot.add(&prediction);
+    plot.save(filename).unwrap();
 }
