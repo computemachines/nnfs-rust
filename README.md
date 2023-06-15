@@ -5,7 +5,7 @@ Regression
 - Different activation functions call for different weight initialization strategies
 - I struggled to get good training results. 
 ```shell
-
+$ cargo run -- ch17 adam -l 0.05 -d 5e-3
 ```
 ![Prediction vs Training Sine Data](/plots/ch17-sine-prediction-vs-training.png)
 
