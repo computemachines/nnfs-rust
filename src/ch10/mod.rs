@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::{
     activation_functions::ReLU,
-    analysis_functions,
+    accuracy,
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::SoftmaxLossCategoricalCrossentropy,
     neurons::LayerDense,
@@ -154,7 +154,7 @@ pub fn run(args: Ch10Args) {
         let NetworkOutput(loss, prediction) = network.forward(&data, &labels);
 
         // let prediction_other = loss_activation_other.output.take().unwrap();
-        let accuracy = analysis_functions::get_accuracy(&prediction, &labels);
+        let accuracy = accuracy::get_accuracy(&prediction, &labels);
         // let accuracy_other = analysis_functions::get_accuracy(&prediction_other, &y);
 
         writer.serialize(EpochRecord {

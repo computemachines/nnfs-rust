@@ -4,12 +4,12 @@ use ndarray::prelude::*;
 use serde::__private::de;
 
 use crate::{
-    activation_functions::{Linear, ReLU, Sigmoid},
+    activation_functions::{Linear, ReLU, Sigmoid,},
     loss_functions,
     loss_functions::{
         BinaryCrossentropy, Loss, MeanSquaredError, SoftmaxLossCategoricalCrossentropy,
     },
-    neurons::{LayerDense, LayerDropout},
+    neurons::{LayerDense, LayerDropout}, model::Layer,
 };
 
 #[derive(Clone)]

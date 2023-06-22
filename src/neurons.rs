@@ -5,6 +5,8 @@ use ndarray_rand::{
 };
 use rand::prelude::Distribution;
 
+use crate::{loss_functions, model::Layer};
+
 #[derive(Default, Clone, Debug)]
 pub struct LayerDense {
     pub n_inputs: usize,
@@ -34,24 +36,19 @@ pub struct LayerDense {
     pub bias_cache: Option<Array1<f64>>,
 }
 
-impl LayerDense {
-    pub fn new(n_inputs: usize, n_neurons: usize) -> Self {
-        let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.2).unwrap());
-        // let weights = Array2::ones((n_inputs, n_neurons));
-        let biases = Array1::zeros(n_neurons);
-        Self {
-            n_inputs,
-            n_neurons,
-            weights,
-            biases,
-            ..Default::default()
-        }
+impl Layer for LayerDense {
+    fn output(&self) -> &Array2<f64> {
+        &self.output.as_ref().unwrap()
     }
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
+    fn dinputs(&self) -> &Array2<f64> {
+        &self.dinputs.as_ref().unwrap()
+    }
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
         self.output = Some(inputs.dot(&self.weights) + &self.biases);
         self.inputs = Some(inputs.clone());
+        &self.output.as_ref().unwrap()
     }
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
         // gradients on parameters
         self.dweights = Some(self.inputs.as_ref().unwrap().t().dot(dvalues));
         self.dbiases = Some(dvalues.sum_axis(Axis(0)));
@@ -94,6 +91,28 @@ impl LayerDense {
 
         // gradients on values
         self.dinputs = Some(dvalues.dot(&self.weights.t()));
+        &self.dinputs.as_ref().unwrap()
+    }
+    fn is_trainable(&mut self) -> Option<&mut LayerDense> {
+        Some(self)
+    }
+    fn regularization_loss(&self) -> f64 {
+        loss_functions::regularization_loss(self)
+    }
+}
+
+impl LayerDense {
+    pub fn new(n_inputs: usize, n_neurons: usize) -> Self {
+        let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.01).unwrap());
+        // let weights = Array2::ones((n_inputs, n_neurons));
+        let biases = Array1::zeros(n_neurons);
+        Self {
+            n_inputs,
+            n_neurons,
+            weights,
+            biases,
+            ..Default::default()
+        }
     }
 }
 
@@ -112,7 +131,9 @@ impl LayerDropout {
             ..Default::default()
         }
     }
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
+}
+impl Layer for LayerDropout {
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64>{
         // the nnfs book wants to save inputs, but doesn't use it anywhere
         // self.inputs = Some(inputs.clone());
 
@@ -125,8 +146,18 @@ impl LayerDropout {
         ));
         // apply mask to output values
         self.output = Some(inputs * self.binary_mask.as_ref().unwrap());
+        &self.output.as_ref().unwrap()
     }
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
         self.dinputs = Some(dvalues * self.binary_mask.as_ref().unwrap());
+        &self.dinputs.as_ref().unwrap()
+    }
+
+    fn output(&self) -> &Array2<f64> {
+        todo!()
+    }
+
+    fn dinputs(&self) -> &Array2<f64> {
+        todo!()
     }
 }

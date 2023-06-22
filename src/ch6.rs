@@ -1,7 +1,7 @@
 use crate::{
-    activation_functions::{ReLU, Softmax},
+    activation_functions::{ReLU, Softmax, },
     loss_functions::{Loss, LossCategoricalCrossentropy},
-    neurons::LayerDense, analysis_functions::get_accuracy,
+    neurons::LayerDense, accuracy::get_accuracy, model::Layer,
 };
 use ndarray::prelude::*;
 use ndarray_rand::{rand_distr::Normal, RandomExt};

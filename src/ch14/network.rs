@@ -3,7 +3,7 @@ use serde::__private::de;
 
 use crate::{
     activation_functions::ReLU, loss_functions,
-    loss_functions::SoftmaxLossCategoricalCrossentropy, neurons::LayerDense,
+    loss_functions::SoftmaxLossCategoricalCrossentropy, neurons::LayerDense, model::Layer,
 };
 
 #[derive(Clone)]

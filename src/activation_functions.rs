@@ -1,6 +1,13 @@
-use std::mem::MaybeUninit;
-
 use ndarray::{prelude::*, Zip};
+
+use crate::model::Layer;
+
+pub trait FinalActivation<T>: Layer {
+    fn prediction(&self) -> T;
+    fn take_output(&mut self) -> Array2<f64> {
+        self.output().clone()
+    }
+}
 
 #[derive(Default, Clone, Debug)]
 pub struct ReLU {
@@ -9,17 +16,21 @@ pub struct ReLU {
     pub dinputs: Option<Array2<f64>>,
 }
 
-impl ReLU {
-    pub fn new() -> Self {
-        Self::default()
+impl Layer for ReLU {
+    fn output(&self) -> &Array2<f64> {
+        self.output.as_ref().unwrap()
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
     }
 
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
         self.inputs = Some(inputs.clone());
         self.output = Some(inputs.map(|x| x.max(0.)));
+        self.output()
     }
 
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
         // let mut dvalues = dvalues.clone();
         // let inputs = self.inputs.as_ref().unwrap();
         // dvalues.zip_mut_with(inputs, |dv, i| {
@@ -38,6 +49,13 @@ impl ReLU {
                     }
                 },
             ));
+        self.dinputs()
+    }
+}
+
+impl ReLU {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
@@ -47,18 +65,46 @@ pub struct Softmax {
     pub inputs: Option<Array2<f64>>,
     pub dinputs: Option<Array2<f64>>,
 }
-
-impl Softmax {
-    pub fn new() -> Self {
-        Self::default()
+impl Layer for Softmax {
+    fn output(&self) -> &Array2<f64> {
+        self.output.as_ref().unwrap()
     }
-
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
         self.inputs = Some(inputs.clone());
         let exp_values: Array2<_> = inputs.map(|x| x.exp());
         let norm_per_input = exp_values.sum_axis(Axis(1));
         let norm_per_input = norm_per_input.to_shape([norm_per_input.len(), 1]).unwrap();
         self.output = Some(exp_values / norm_per_input);
+        self.output()
+    }
+
+    fn backward(&mut self, dinputs: &Array2<f64>) -> &Array2<f64> {
+        todo!()
+    }
+}
+impl FinalActivation<Array1<usize>> for Softmax {
+    fn prediction(&self) -> Array1<usize> {
+        // this is python argmax
+        self.output()
+            .outer_iter()
+            .map(|row| {
+                let row_argmax = row
+                    .indexed_iter()
+                    .max_by(|(_, &a), (_, &b)| a.partial_cmp(&b).unwrap())
+                    .unwrap()
+                    .0;
+                row_argmax
+            })
+            .collect()
+    }
+}
+
+impl Softmax {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     /// Backward pass following the python example
@@ -93,13 +139,21 @@ impl Sigmoid {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
+impl Layer for Sigmoid {
+    fn output(&self) -> &Array2<f64> {
+        self.output.as_ref().unwrap()
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
         self.inputs = Some(inputs.clone());
         self.output = Some(inputs.map(|x| 1. / (1. + (-x).exp())));
+        self.output()
     }
-
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
         self.dinputs = Some(Array2::zeros(dvalues.raw_dim()));
         azip!((
             mut dinput in self.dinputs.as_mut().unwrap(),
@@ -108,8 +162,58 @@ impl Sigmoid {
         ) {
             *dinput = dvalue * (1. - output_value) * output_value;
         });
+        self.dinputs()
     }
 }
+
+impl FinalActivation<Array2<usize>> for Sigmoid {
+    fn prediction(&self) -> Array2<usize> {
+        self.output().mapv(|x| if x > 0.5 { 1 } else { 0 })
+    }
+}
+impl FinalActivation<Array2<f64>> for Sigmoid {
+    fn prediction(&self) -> Array2<f64> {
+        self.output().mapv(|x| if x > 0.5 { 1. } else { 0. })
+    }
+}
+
+/// Not in the book, my own addition to try to make a simple perceptron
+#[derive(Default, Clone, Debug)]
+pub struct Step{
+    pub output: Option<Array2<f64>>,
+    pub inputs: Option<Array2<f64>>,
+    pub dinputs: Option<Array2<f64>>,
+}
+
+impl Step {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Layer for Step {
+    fn output(&self) -> &Array2<f64> {
+        self.output.as_ref().unwrap()
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
+        self.inputs = Some(inputs.clone());
+        self.output = Some(inputs.map(|x| if *x > 0.0 { 1. } else { 0. }));
+        self.output()
+    }
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
+        todo!()
+    }
+}
+
+impl FinalActivation<Array2<usize>> for Step {
+    fn prediction(&self) -> Array2<usize> {
+        self.output().mapv(|x| if x > 0.5 { 1 } else { 0 })
+    }
+}
+
 
 #[derive(Default, Clone, Debug)]
 pub struct Linear {
@@ -122,14 +226,31 @@ impl Linear {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
-    pub fn forward(&mut self, inputs: &Array2<f64>) {
-        self.inputs = Some(inputs.clone());
-        self.output = Some(inputs.clone());
+impl Layer for Linear {
+    fn output(&self) -> &Array2<f64> {
+        self.output.as_ref().unwrap()
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
     }
 
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
+    fn forward(&mut self, inputs: &Array2<f64>) -> &Array2<f64> {
+        self.inputs = Some(inputs.clone());
+        self.output = Some(inputs.clone());
+        self.output()
+    }
+
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
         self.dinputs = Some(dvalues.clone());
+        self.dinputs()
+    }
+}
+
+impl FinalActivation<Array2<f64>> for Linear {
+    fn prediction(&self) -> Array2<f64> {
+        self.output().clone()
     }
 }
 

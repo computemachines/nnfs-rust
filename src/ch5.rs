@@ -1,9 +1,9 @@
 use ndarray::prelude::*;
 
 use crate::{
-    activation_functions::{ReLU, Softmax},
+    activation_functions::{ReLU, Softmax, },
     loss_functions::Loss,
-    neurons::LayerDense,
+    neurons::LayerDense, model::Layer,
 };
 
 pub fn run() {
@@ -53,7 +53,7 @@ pub fn run() {
     println!("loss: {:.3}", loss);
 
     // calculate accuracy from output of activation2 and targets
-    let accuracy = crate::analysis_functions::get_accuracy(
+    let accuracy = crate::accuracy::get_accuracy(
         activation2.output.as_ref().unwrap(),
         &labels,
     );

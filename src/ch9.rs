@@ -6,9 +6,10 @@ use ndarray::{Array1, Array2};
 use ndarray_rand::RandomExt;
 use rand::distributions::Uniform;
 
-use crate::activation_functions::{Softmax, ReLU};
+use crate::activation_functions::{Softmax, ReLU, };
 use crate::data::spiral_data;
 use crate::loss_functions::{Loss, LossCategoricalCrossentropy, SoftmaxLossCategoricalCrossentropy};
+use crate::model::Layer;
 use crate::neurons::LayerDense;
 
 pub fn run() {
@@ -295,7 +296,7 @@ pub fn full_model_code() {
 
     // calculate accuracy from output of activation2 and targets
     let accuracy =
-        crate::analysis_functions::get_accuracy(loss_activation.output.as_ref().unwrap(), &y);
+        crate::accuracy::get_accuracy(loss_activation.output.as_ref().unwrap(), &y);
     // Print accuracy
     println!("accuracy: {}", accuracy);
 

@@ -1,4 +1,4 @@
-use nnfs::ch10::Ch10Args;
+use nnfs::{ch10::Ch10Args, ch18::Ch18Args};
 use nnfs::ch11::Ch11Args;
 use nnfs::ch14::Ch14Args;
 use nnfs::ch15::Ch15Args;
@@ -23,6 +23,7 @@ enum Commands {
     Ch15(Ch15Args),
     Ch16(Ch16Args),
     Ch17(Ch17Args),
+    Ch18(Ch18Args),
 }
 
 fn main() {
@@ -34,5 +35,6 @@ fn main() {
         Commands::Ch15(args) => nnfs::ch15::run(args),
         Commands::Ch16(args) => nnfs::ch16::run(args),
         Commands::Ch17(args) => nnfs::ch17::run(args),
+        Commands::Ch18(args) => nnfs::ch18::run(args),
     }
 }

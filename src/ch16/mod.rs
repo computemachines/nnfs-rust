@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::{
     activation_functions::ReLU,
-    analysis_functions,
+    accuracy,
     data::{lin_map, new_root_area, spiral_data, visualize_nn_scatter},
     loss_functions::{SoftmaxLossCategoricalCrossentropy, BinaryCrossentropy, Loss},
     neurons::LayerDense,
@@ -164,14 +164,14 @@ pub fn run(args: Ch16Args) {
         let NetworkOutput(data_loss, regularization_loss, prediction) =
             network.forward(&data, &labels);
 
-        let accuracy = analysis_functions::get_accuracy_binary(&prediction, &labels);
+        let accuracy = accuracy::get_accuracy_binary(&prediction, &labels);
 
         // evaluate model performance using test data and log results
         if epoch % 100 == 0 {
             let NetworkOutput(test_data_loss, test_regularization_loss, test_prediction) =
                 network.validate(&test_data, &test_labels);
 
-            let test_accuracy = analysis_functions::get_accuracy_binary(&test_prediction, &test_labels);
+            let test_accuracy = accuracy::get_accuracy_binary(&test_prediction, &test_labels);
 
             println!(
                 "

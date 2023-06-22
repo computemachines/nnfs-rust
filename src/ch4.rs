@@ -1,6 +1,6 @@
 use ndarray::prelude::*;
 
-use crate::{activation_functions::{ReLU, Softmax}, neurons::LayerDense};
+use crate::{activation_functions::{ReLU, Softmax, }, neurons::LayerDense, model::Layer};
 
 pub fn run() {
     // create dataset

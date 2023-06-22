@@ -12,14 +12,16 @@ pub mod ch14;
 pub mod ch15;
 pub mod ch16;
 pub mod ch17;
+pub mod ch18;
 
 pub mod activation_functions;
-pub mod analysis_functions;
+pub mod accuracy;
 pub mod data;
 pub mod loss_functions;
 pub mod neurons;
 pub mod optimizer;
 pub mod util;
+pub mod model;
 
 #[macro_use]
 use approx::assert_abs_diff_eq;
@@ -40,7 +42,7 @@ pub fn show_data() {
 mod tests {
     use crate::{
         activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossentropy,
-        neurons::LayerDense,
+        neurons::LayerDense, model::Layer,
     };
 
     use super::*;
@@ -98,7 +100,7 @@ mod tests {
             losses[idx] = loss;
             let predictions = loss_activation.output.take().unwrap();
 
-            let accuracy = analysis_functions::get_accuracy(&predictions, &y);
+            let accuracy = accuracy::get_accuracy(&predictions, &y);
         }
         println!("{} +- {}", losses.mean().unwrap(), losses.std(1.0));
         assert_abs_diff_eq!(losses.mean().unwrap(), 0.6937, epsilon=0.001);

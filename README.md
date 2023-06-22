@@ -1,3 +1,67 @@
+# Chapter 18
+## The model
+Example usage:
+```rust
+let binary_inputs = array![[0., 0.], [0., 1.], [1., 0.], [1., 1.]];
+let and_outputs =   array![[0.],     [0.],     [0.],     [1.]];
+let xor_outputs =   array![[0.],     [1.],     [1.],     [0.]];
+
+// Instantiate the (uninitialized) model
+let mut model = Model::new();
+
+// Add perceptron layers
+model.add(LayerDense::new(2, 1));
+model.add_final_activation(Sigmoid::new());
+    
+// Set the loss, optimizer, and accuracy type
+model.set(
+    BinaryCrossentropy::new(),
+    OptimizerSDG::from(OptimizerSDGConfig {
+        learning_rate: 1.0,
+        ..Default::default()
+    }),
+    AccuracyBinary,
+);
+
+// Finalize the model. This changes the type of the model to permit training.
+let mut model = model.finalize();
+
+// Train the model
+model.train(
+    &binary_inputs,
+    &and_outputs,
+    ModelTrainConfig {
+        epochs: 30,
+        print_every: 1,
+    },
+);
+
+
+// show output from trained model
+model.forward(&binary_inputs);
+let inference = model.output();
+println!("Inference: \n{}", inference);
+```
+Rust really shines here, the compiler will catch incompatible uses of Loss, input dimension, and Accuracy types. Python however is much much easier to do exploratory data analysis and visualization with matplotlib. This was the only chapter where I thought that rust was as pleasant to do ML in as python.
+```rust
+## Example output
+```shell
+$ cargo run -- ch18
+    Finished dev [unoptimized + debuginfo] target(s) in 2.00s
+     Running `target/debug/nnfs-rust ch18`
+epoch: 5, acc: 0.750, loss: 0.357 (data_loss: 0.357, reg_loss: 0.000)
+epoch: 10, acc: 1.000, loss: 0.233 (data_loss: 0.233, reg_loss: 0.000)
+epoch: 15, acc: 1.000, loss: 0.177 (data_loss: 0.177, reg_loss: 0.000)
+epoch: 20, acc: 1.000, loss: 0.150 (data_loss: 0.150, reg_loss: 0.000)
+epoch: 25, acc: 1.000, loss: 0.138 (data_loss: 0.138, reg_loss: 0.000)
+epoch: 30, acc: 1.000, loss: 0.132 (data_loss: 0.132, reg_loss: 0.000)
+Inference: 
+[[0.000015782928969143955],
+ [0.0047410583767099794],
+ [0.004878318834536076],
+ [0.5967060593546276]]
+```
+
 # Chapter 17
 Regression
 - Requires at least 2 nonlinear activation layers

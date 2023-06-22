@@ -1,7 +1,7 @@
 use ndarray::{prelude::*, Zip};
 use rand::seq::index::sample;
 
-use crate::{activation_functions, neurons::LayerDense};
+use crate::{activation_functions::{self}, neurons::LayerDense, model::Layer};
 
 pub trait Loss<T> {
     fn calculate(&self, output: &Array2<f64>, y: &T) -> f64 {
@@ -11,11 +11,12 @@ pub trait Loss<T> {
         // calculate mean loss
 
         // return losses
-        sample_losses.sum_axis(Axis(0)).sum() / sample_losses.len() as f64
+        sample_losses.mean().unwrap()
     }
 
     fn forward(&self, dvalues: &Array2<f64>, y_true: &T) -> Array1<f64>;
     fn backward(&mut self, dvalues: &Array2<f64>, y_true: &T);
+    fn dinputs(&self) -> &Array2<f64>;
 }
 
 pub fn regularization_loss(layer: &LayerDense) -> f64 {
@@ -86,11 +87,15 @@ impl Loss<Array1<usize>> for LossCategoricalCrossentropy {
         });
         self.backward(dvalues, &y_true_onehot);
     }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
 }
 
 /// Handle the case where y_true is list of one-hot vectors
 impl Loss<Array2<f64>> for LossCategoricalCrossentropy {
     fn forward(&self, y_pred: &Array2<f64>, y_true: &Array2<f64>) -> Array1<f64> {
+        println!("forward");
         // Clip data to prevent division by 0
         // Clip both sides to not drag mean towards any value
         let y_pred_clipped = y_pred.mapv(|x| x.max(1e-7).min(1. - 1e-7));
@@ -112,6 +117,9 @@ impl Loss<Array2<f64>> for LossCategoricalCrossentropy {
 
         // calculate normalized gradient
         self.dinputs = Some(-y_true / (dvalues * samples as f64));
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
     }
 }
 
@@ -164,6 +172,9 @@ impl Loss<Array2<f64>> for BinaryCrossentropy {
         // Normalize gradient
         self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
     }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
 }
 
 #[derive(Default, Clone, Debug)]
@@ -196,6 +207,9 @@ impl Loss<Array2<f64>> for MeanSquaredError {
         // Normalize gradient
         self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
     }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
+    }
 }
 
 #[derive(Default, Clone, Debug)]
@@ -227,6 +241,9 @@ impl Loss<Array2<f64>> for MeanAbsoluteError {
 
         // Normalize gradient
         self.dinputs.as_mut().unwrap().map_inplace(|x| *x /= samples as f64);
+    }
+    fn dinputs(&self) -> &Array2<f64> {
+        self.dinputs.as_ref().unwrap()
     }
 }
 

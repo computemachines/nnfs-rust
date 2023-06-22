@@ -1,7 +1,7 @@
 
 use ndarray::prelude::*;
 
-use crate::{neurons::LayerDense, activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossentropy};
+use crate::{neurons::LayerDense, activation_functions::ReLU, loss_functions::SoftmaxLossCategoricalCrossentropy, model::Layer};
 
 #[derive(Clone)]
 pub struct Network {

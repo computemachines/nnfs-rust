@@ -2,8 +2,8 @@ use ndarray::prelude::*;
 use serde::__private::de;
 
 use crate::{
-    activation_functions::{ReLU, Sigmoid}, loss_functions,
-    loss_functions::{SoftmaxLossCategoricalCrossentropy, BinaryCrossentropy, Loss}, neurons::{LayerDense, LayerDropout},
+    activation_functions::{ReLU, Sigmoid, }, loss_functions,
+    loss_functions::{SoftmaxLossCategoricalCrossentropy, BinaryCrossentropy, Loss}, neurons::{LayerDense, LayerDropout}, model::Layer,
 };
 
 #[derive(Clone)]

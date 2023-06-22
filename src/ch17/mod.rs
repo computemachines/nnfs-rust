@@ -1,9 +1,11 @@
 use std::path::PathBuf;
 
 use crate::{
+    accuracy::{self, Accuracy, AccuracyRegression},
     activation_functions::ReLU,
-    analysis_functions,
-    data::{lin_map, new_root_area, sine_data, spiral_data, visualize_nn_scatter, plot_regression_data},
+    data::{
+        lin_map, new_root_area, plot_regression_data, sine_data, spiral_data, visualize_nn_scatter,
+    },
     loss_functions::{BinaryCrossentropy, Loss, SoftmaxLossCategoricalCrossentropy},
     neurons::LayerDense,
     optimizer::{
@@ -142,18 +144,26 @@ pub fn run(args: Ch17Args) {
         let NetworkOutput(data_loss, regularization_loss, prediction) =
             network.forward(&inputs, &outputs_true);
 
-        let accuracy = analysis_functions::get_accuracy_regression(
-            &prediction,
-            &outputs_true,
-            accuracy_precision,
-        );
-        
+        let accuracy =
+            AccuracyRegression::new(accuracy_precision).calculate(&prediction, &outputs_true);
+
         // perform backward pass
         network.backward(&outputs_true);
-        
-        println!("epoch: {:05}, acc: {:.3}, loss: {:.3}, learning rate: {:0.5}", epoch, accuracy, data_loss, optimizer.current_learning_rate());
+
+        println!(
+            "epoch: {:05}, acc: {:.3}, loss: {:.3}, learning rate: {:0.5}",
+            epoch,
+            accuracy,
+            data_loss,
+            optimizer.current_learning_rate()
+        );
         if epoch % 10 == 0 {
-        plot_regression_data(&inputs.as_slice().unwrap(), outputs_true.as_slice().unwrap(), prediction.as_slice().unwrap(), "sine_data.png");
+            plot_regression_data(
+                &inputs.as_slice().unwrap(),
+                outputs_true.as_slice().unwrap(),
+                prediction.as_slice().unwrap(),
+                "sine_data.png",
+            );
         }
         // println!("prediction: \n{:#?}", prediction);
         // update weights and biases
@@ -162,8 +172,11 @@ pub fn run(args: Ch17Args) {
         optimizer.update_params(&mut network.dense2);
         optimizer.post_update_params();
     }
-    let NetworkOutput(_, _, prediction) =
-            network.forward(&inputs, &outputs_true);
-    plot_regression_data(&inputs.as_slice().unwrap(), outputs_true.as_slice().unwrap(), prediction.as_slice().unwrap(), "sine_data.png");
-
+    let NetworkOutput(_, _, prediction) = network.forward(&inputs, &outputs_true);
+    plot_regression_data(
+        &inputs.as_slice().unwrap(),
+        outputs_true.as_slice().unwrap(),
+        prediction.as_slice().unwrap(),
+        "sine_data.png",
+    );
 }
