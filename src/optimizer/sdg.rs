@@ -54,7 +54,7 @@ impl Optimizer for OptimizerSDG {
                    bias_momentum in layer.bias_momentums.get_or_insert_with(|| Array1::zeros(layer.n_neurons)),
                    &db in dbias) {
                 let bias_update = self.momentum * *bias_momentum - self.current_learning_rate * db;
-                *bias += -self.current_learning_rate * db;
+                *bias += bias_update;
                 *bias_momentum = bias_update;
             });
         } else {
