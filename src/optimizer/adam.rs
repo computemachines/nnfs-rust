@@ -73,7 +73,7 @@ impl Optimizer for OptimizerAdam {
                mut bias_momentum in layer.bias_momentums.get_or_insert_with(|| Array1::zeros(layer.n_neurons)),
                &db in layer.dbiases.as_ref().unwrap()) {
             // bias_momentums are a moving average of the bias gradients
-            *bias_momentum = util::weighted_average(self.beta_1, *bias_momentum, db * db);
+            *bias_momentum = util::weighted_average(self.beta_1, *bias_momentum, db);
             let bias_momentum_corrected = *bias_momentum * momentum_correction;
 
             // bias_cache is a moving average of the squared gradients
