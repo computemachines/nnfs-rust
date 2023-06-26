@@ -103,7 +103,7 @@ impl Layer for LayerDense {
 
 impl LayerDense {
     pub fn new(n_inputs: usize, n_neurons: usize) -> Self {
-        let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.01).unwrap());
+        let weights = Array2::random((n_inputs, n_neurons), Normal::new(0., 0.1).unwrap());
         // let weights = Array2::ones((n_inputs, n_neurons));
         let biases = Array1::zeros(n_neurons);
         Self {

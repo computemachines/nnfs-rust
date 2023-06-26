@@ -61,6 +61,17 @@ Inference:
  [0.004878318834536076],
  [0.5967060593546276]]
 ```
+## Unfininshed work
+I did not implement the combined Softmax + Categorical Cross Entropy backward pass with the model but left it open to be done using generics. All I would need to do is write a specialized implementation:
+```rust
+impl Model<Array1<f64>, Softmax, CategoricalCrossEntropy> {
+    ...
+    fn backward(&mut self, y_pred: &Array1<f64>, y_true: &Array1<f64>) {
+        ...
+    }
+}
+```
+Code that used both Softmax and CategoricalCrossEntropy would then get a free speedup without needing to be updated. 
 
 # Chapter 17
 Regression

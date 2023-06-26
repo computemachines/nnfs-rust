@@ -211,7 +211,7 @@ pub fn plot_regression_data(x: &[f64], y_pred: &[f64], y_true: &[f64], filename:
     let mut prediction = Curve::new();
     prediction.draw(&x, &y_pred);
     let mut plot = Plot::new();
-    plot.add(&target);
     plot.add(&prediction);
+    plot.add(&target);
     plot.save(filename).unwrap();
 }

@@ -81,8 +81,25 @@ impl Layer for Softmax {
         self.output()
     }
 
-    fn backward(&mut self, dinputs: &Array2<f64>) -> &Array2<f64> {
-        todo!()
+    fn backward(&mut self, dvalues: &Array2<f64>) -> &Array2<f64> {
+        // python: self.dinputs = np.empty_like(dvalues)
+        self.dinputs = Some(Array2::zeros(dvalues.raw_dim()));
+
+        // python: for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
+        azip!((
+            mut dinput_row in self.dinputs.as_mut().unwrap().rows_mut(),
+            single_output in self.output.as_ref().unwrap().rows(),
+            single_dvalues in dvalues.rows()
+        ) {
+            // python: single_output = single_output.reshape(-1, 1)
+            let single_output = single_output.into_shape((single_output.shape()[0], 1)).unwrap();
+            // python: jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
+            let jacobian =
+                Array2::from_diag(&single_output.t().row(0)) - single_output.dot(&single_output.t());
+            // python: self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
+            dinput_row.assign(&jacobian.dot(&single_dvalues));
+        });
+        self.dinputs()
     }
 }
 impl FinalActivation<Array1<usize>> for Softmax {
@@ -105,27 +122,6 @@ impl FinalActivation<Array1<usize>> for Softmax {
 impl Softmax {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    /// Backward pass following the python example
-    pub fn backward(&mut self, dvalues: &Array2<f64>) {
-        // python: self.dinputs = np.empty_like(dvalues)
-        self.dinputs = Some(Array2::zeros(dvalues.raw_dim()));
-
-        // python: for index, (single_output, single_dvalues) in enumerate(zip(self.output, dvalues)):
-        azip!((
-            mut dinput_row in self.dinputs.as_mut().unwrap().rows_mut(),
-            single_output in self.output.as_ref().unwrap().rows(),
-            single_dvalues in dvalues.rows()
-        ) {
-            // python: single_output = single_output.reshape(-1, 1)
-            let single_output = single_output.into_shape((single_output.shape()[0], 1)).unwrap();
-            // python: jacobian_matrix = np.diagflat(single_output) - np.dot(single_output, single_output.T)
-            let jacobian =
-                Array2::from_diag(&single_output.t().row(0)) - single_output.dot(&single_output.t());
-            // python: self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
-            dinput_row.assign(&jacobian.dot(&single_dvalues));
-        });
     }
 }
 
