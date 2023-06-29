@@ -61,7 +61,7 @@ Inference:
  [0.004878318834536076],
  [0.5967060593546276]]
 ```
-## Unfininshed work
+## Unfinished work
 I did not implement the combined Softmax + Categorical Cross Entropy backward pass with the model but left it open to be done using generics. All I would need to do is write a specialized implementation:
 ```rust
 impl Model<Array1<f64>, Softmax, CategoricalCrossEntropy> {
