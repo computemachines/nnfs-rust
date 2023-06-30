@@ -1,11 +1,44 @@
 # Chapter 19
 ## Fashion MNIST data
 You will need to extract the zip file manually after downloading it. The zip crate can't handle the compression algorithm used.
+I took some pictures of my own clothes and some random objects I not included in the training set. 
+
+Using GIMP, I cropped the images to 28x28 and converted them to grayscale, inverted the colors, and did a auto white balance. The backgrounds are not perfectly black like the training images.
+
+Raw image:
+![T-shirt](/my_images/2.jpg)
+
+Preprocessed image:
+![T-shirt](/my_images/2.png)
+
+
 ```shell
-$ cargo run -- ch19 download
+$ cargo run -- ch19 train
+...
+epoch: 10, acc: 0.915, loss: 10.0595011732 (data_loss: 10.060, reg_loss: 0.000)
+
+$ cargo run -- ch19 inference --filename my_images/2.png 
+    Finished dev [unoptimized + debuginfo] target(s) in 0.08s
+     Running `target/debug/nnfs-rust ch19 inference --filename my_images/2.png`
+Loading model...done
+Loading image...
+done
+Running inference...done
+
+
+---- Report ----
+Bag: 27.11%
+Shirt: 21.69%
+Coat: 19.01%
+Pullover: 15.71%
+T-shirt/top: 10.75%
+Trouser: 3.24%
+Dress: 2.43%
+Ankle boot: 0.04%
+Sandal: 0.02%
+Sneaker: 0.00%
 ```
-
-
+The results could definity be inproved by manipulating the training images to make it look superficially more like my images. I get over 90% accuracy on the testing set.
 # Chapter 18
 ## The model api
 Example usage:
