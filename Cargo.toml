@@ -10,10 +10,12 @@ approx = "0.5.1"
 clap = { version = "4.3.0", features = ["derive"] }
 colorgrad = "0.6.2"
 csv = "1.2.1"
+image = "0.24.6"
 ndarray = { version = "0.15.6", features = ["approx-0_5"] }
 ndarray-rand = "0.14.0"
 plotpy = "0.3.5"
 plotters = "0.3.4"
 rand = "0.8.5"
+reqwest = { version = "0.11.18", features = ["blocking"] }
 serde = { version = "1.0.163", features = ["derive"] }
 serde-pickle = "1.1.1"

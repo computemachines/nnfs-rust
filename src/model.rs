@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 
 use ndarray::prelude::*;
-use serde_pickle::DeOptions;
+use serde_pickle::{DeOptions, SerOptions};
 
 use crate::{
     accuracy::{self, Accuracy},
@@ -78,6 +78,9 @@ where
 
 /// Feedforward Neural Network Model
 /// TODO: add specialized impl backward code for combined SoftmaxCrossEntropy.
+///
+/// T is the type of the final activation function's prediction method output
+/// not the final activation layer output.
 pub struct Model<T, A, L>
 where
     A: FinalActivation<T>,
@@ -148,6 +151,32 @@ where
         if layers.any(|layer| layer.is_trainable().is_some()) {
             panic!("There are still trainable layers left after all weights and biases have been assigned");
         }
+    }
+
+    pub fn save_weights_biases(&mut self, weights_filename: &str, biases_filename: &str) {
+        // use serde_pickle to save weights and biases
+        let mut weights_t: Vec<Vec<Vec<f64>>> = Vec::new();
+        let mut biases: Vec<Vec<f64>> = Vec::new();
+
+        for layer in &mut self.layers {
+            if let Some(dense) = layer.is_trainable() {
+                let dense_weights_t = dense.weights.t().outer_iter().map(|row| row.to_vec()).collect();
+                let dense_biases = dense.biases.to_vec();
+                weights_t.push(dense_weights_t);
+                biases.push(dense_biases);
+            }
+        }
+
+        serde_pickle::to_writer(
+            &mut std::fs::File::create(weights_filename).unwrap(),
+            &weights_t,
+            SerOptions::default(),
+        ).unwrap();
+        serde_pickle::to_writer(
+            &mut std::fs::File::create(biases_filename).unwrap(),
+            &biases,
+            SerOptions::default(),
+        ).unwrap();
     }
 
     pub fn forward(&mut self, inputs: &Array2<f64>) {
@@ -246,14 +275,15 @@ where
 
             // Iterate over steps
             for step in 0..train_steps {
-                println!("Step: {}", step);
-
                 #[allow(non_snake_case)]
                 let (batch_X, batch_y) = if let Some(batch_size) = config.batch_size {
                     let start = step * batch_size;
-                    let end = start + batch_size;
+                    let mut end = start + batch_size;
+                    if end > inputs.nrows() {
+                        end = inputs.nrows();
+                    }
                     (
-                        inputs.slice(s![start..end, ..]), // TODO: check if this works with remainder batches
+                        inputs.slice(s![start..end, ..]),
                         outputs_true.slice(s![start..end]),
                     )
                 } else {
@@ -304,25 +334,25 @@ where
                 self.optimizer.post_update_params();
 
                 // Print a summary
-                // if step == 0
-                //     || config
-                //         .print_every
-                //         .is_some_and(|print_every| step % print_every == 0)
-                // {
-                // }
+                if step == 0
+                    || config
+                        .print_every
+                        .is_some_and(|print_every| step % print_every == 0)
+                {
+                    println!(
+                        "epoch: {}, acc: {:.3}, loss: {:.10} (data_loss: {:.3}, reg_loss: {:.3})",
+                        epoch,
+                        epoch_accuracy / num_samples as f64,
+                        epoch_data_loss / num_samples as f64,
+                        epoch_data_loss / num_samples as f64,
+                        epoch_regularization_loss / num_samples as f64
+                    );
+                }
             }
-            println!(
-                "epoch: {}, acc: {:.3}, loss: {:.10} (data_loss: {:.3}, reg_loss: {:.3})",
-                epoch,
-                epoch_accuracy / num_samples as f64,
-                epoch_data_loss / num_samples as f64,
-                epoch_data_loss / num_samples as f64,
-                epoch_regularization_loss / num_samples as f64
-            );
         }
 
         // If there is the validation data calculate the validation loss and accuracy
-    #[allow(non_snake_case)]
+        #[allow(non_snake_case)]
         if let Some((X_val, y_val)) = config.validation_data {
             let mut total_data_loss = 0.0;
             let mut total_regularization_loss = 0.0;
@@ -581,7 +611,7 @@ mod tests {
     use crate::accuracy::AccuracyBinary;
     use crate::activation_functions::Sigmoid;
     use crate::loss_functions::BinaryCrossentropy;
-    use crate::optimizer::{OptimizerSDGConfig, OptimizerSDG};
+    use crate::optimizer::{OptimizerSDG, OptimizerSDGConfig};
     use approx::assert_abs_diff_eq;
     use ndarray::array;
 
@@ -590,7 +620,7 @@ mod tests {
         let mut model = Model::new();
         model.add(LayerDense::new(2, 1));
         model.add_final_activation(Sigmoid::new());
-    
+
         model.set(
             BinaryCrossentropy::new(),
             OptimizerSDG::from(OptimizerSDGConfig {
@@ -608,22 +638,34 @@ mod tests {
             layer.weights.assign(&array![[0.1], [-0.2]]);
             layer.biases.assign(&array![0.1]);
         }
-        
+
         let test_inputs = array![[0.5, 0.6]];
         let test_outputs = array![[1.]];
 
         model.forward(&test_inputs);
         let outputs = model.output();
-        assert_abs_diff_eq!(outputs, &array![[0.50749]], epsilon=0.001);
+        assert_abs_diff_eq!(outputs, &array![[0.50749]], epsilon = 0.001);
 
         let data_loss = model.loss.calculate(outputs, &test_outputs);
-        assert_abs_diff_eq!(data_loss, 0.6782, epsilon=0.0001);
+        assert_abs_diff_eq!(data_loss, 0.6782, epsilon = 0.0001);
 
         model.backward(None, &test_outputs);
-        assert_abs_diff_eq!(model.loss.dinputs(), &array![[-1.97044552]], epsilon=0.0001);
-        assert_abs_diff_eq!(model.final_activation.dinputs(), &array![[-0.49250056]], epsilon=0.0001);
-        
+        assert_abs_diff_eq!(
+            model.loss.dinputs(),
+            &array![[-1.97044552]],
+            epsilon = 0.0001
+        );
+        assert_abs_diff_eq!(
+            model.final_activation.dinputs(),
+            &array![[-0.49250056]],
+            epsilon = 0.0001
+        );
+
         let layer = model.layers[0].is_trainable().unwrap();
-        assert_abs_diff_eq!(layer.dweights.as_ref().unwrap(), &array![[-0.24625028], [-0.29550034]], epsilon=0.00001);
+        assert_abs_diff_eq!(
+            layer.dweights.as_ref().unwrap(),
+            &array![[-0.24625028], [-0.29550034]],
+            epsilon = 0.00001
+        );
     }
 }

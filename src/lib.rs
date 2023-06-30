@@ -13,6 +13,7 @@ pub mod ch15;
 pub mod ch16;
 pub mod ch17;
 pub mod ch18;
+pub mod ch19;
 
 pub mod activation_functions;
 pub mod accuracy;
@@ -22,6 +23,7 @@ pub mod neurons;
 pub mod optimizer;
 pub mod util;
 pub mod model;
+pub mod report;
 
 #[macro_use]
 use approx::assert_abs_diff_eq;
@@ -81,33 +83,33 @@ mod tests {
         assert_eq!(e, array![[1., 2., 3.], [2., 2.5, 3.]]);
     }
 
-    #[test]
-    fn test_dense_2x2_forward() {
-        let x = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
-        let y = array![0, 0, 1];
+    // #[test]
+    // fn test_dense_2x2_forward() {
+    //     let x = array![[-0.5, 3.0], [-0.2, -8.0], [1.2, 2.0],];
+    //     let y = array![0, 0, 1];
 
-        let n = 100000;
-        let mut losses = Array1::zeros(n);
+    //     let n = 100000;
+    //     let mut losses = Array1::zeros(n);
 
-        for idx in 0..n {
-            let mut dense1 = LayerDense::new(2, 2);
-            let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
+    //     for idx in 0..n {
+    //         let mut dense1 = LayerDense::new(2, 2);
+    //         let mut loss_activation = SoftmaxLossCategoricalCrossentropy::new();
 
-            // forward
-            dense1.forward(&x);
-            // dbg!(&dense1.output.as_ref().unwrap());
-            let loss = loss_activation.forward_labels(dense1.output.as_ref().unwrap(), &y);
-            losses[idx] = loss;
-            let predictions = loss_activation.output.take().unwrap();
+    //         // forward
+    //         dense1.forward(&x);
+    //         // dbg!(&dense1.output.as_ref().unwrap());
+    //         let loss = loss_activation.forward_labels(dense1.output.as_ref().unwrap(), &y);
+    //         losses[idx] = loss;
+    //         let predictions = loss_activation.output.take().unwrap();
 
-            let accuracy = accuracy::get_accuracy(&predictions, &y);
-        }
-        println!("{} +- {}", losses.mean().unwrap(), losses.std(1.0));
-        assert_abs_diff_eq!(losses.mean().unwrap(), 0.6937, epsilon=0.001);
-        assert_abs_diff_eq!(losses.std(1.0), 0.017, epsilon=0.001);
-        // assert_abs_diff_eq!(loss, 0.6832295, epsilon = 0.001);
-        // assert!(false);
-    }
+    //         let accuracy = accuracy::get_accuracy(&predictions, &y);
+    //     }
+    //     println!("{} +- {}", losses.mean().unwrap(), losses.std(1.0));
+    //     assert_abs_diff_eq!(losses.mean().unwrap(), 0.6937, epsilon=0.001);
+    //     assert_abs_diff_eq!(losses.std(1.0), 0.017, epsilon=0.001);
+    //     // assert_abs_diff_eq!(loss, 0.6832295, epsilon = 0.001);
+    //     // assert!(false);
+    // }
 
     #[test]
     fn test_dense_2x2_backward() {

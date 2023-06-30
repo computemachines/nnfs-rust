@@ -49,5 +49,14 @@
                 }
             ]
         },
+        {
+            "type": "shell",
+            "label": "cargo build",
+            "command": "cargo build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
     ]
 }

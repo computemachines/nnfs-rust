@@ -1,6 +1,12 @@
 use ndarray::{prelude::*, Zip};
 
+/// Trait for accuracy functions.
+/// 
+/// Compares predictions to ground truth labels and returns a accuracy metric.
 pub trait Accuracy<T> {
+    /// Compute the accuracy. Predictions and ground truth labels must be the
+    /// same type. Predictions come from the final_activation.prediction()
+    /// method. Not the output of the final activation layer
     fn calculate(&self, predictions: &T, labels: &T) -> f64;
     fn init(&mut self, outputs_true: &T) {}
 }

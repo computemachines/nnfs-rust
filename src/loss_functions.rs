@@ -338,6 +338,8 @@ impl SoftmaxLossCategoricalCrossentropy {
 
 #[cfg(test)]
 mod tests {
+    use approx::assert_abs_diff_eq;
+
     use super::*;
 
     #[test]
@@ -374,5 +376,19 @@ mod tests {
         let dinputs_indices = loss.dinputs.as_ref().unwrap().clone();
 
         assert_eq!(loss_val1, loss_val2);
+    }
+
+    #[test]
+    fn test_bce_backward() {
+        let y = array![[1.0]];
+        let y_hat = array![[0.6]];
+
+        let mut loss = BinaryCrossentropy::new();
+        let loss_val = loss.calculate(&y_hat, &y);
+        assert_abs_diff_eq!(loss_val, 0.51, epsilon = 0.01);
+
+        loss.backward(&y_hat, &y);
+        let dvalues = loss.dinputs.as_ref().unwrap();
+        assert_abs_diff_eq!(dvalues, &array![[-1.67]], epsilon = 0.01);
     }
 }

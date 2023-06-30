@@ -2,5 +2,9 @@
     "rust-analyzer.showUnlinkedFileNotification": false,
     "lldb.launch.initCommands": [
         "command script import ${workspaceFolder}/.vscode/name_of_ndarray_format.py"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }

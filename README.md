@@ -1,5 +1,13 @@
+# Chapter 19
+## Fashion MNIST data
+You will need to extract the zip file manually after downloading it. The zip crate can't handle the compression algorithm used.
+```shell
+$ cargo run -- ch19 download
+```
+
+
 # Chapter 18
-## The model
+## The model api
 Example usage:
 ```rust
 let binary_inputs = array![[0., 0.], [0., 1.], [1., 0.], [1., 1.]];

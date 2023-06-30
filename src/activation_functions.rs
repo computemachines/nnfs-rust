@@ -110,7 +110,14 @@ impl FinalActivation<Array1<usize>> for Softmax {
             .map(|row| {
                 let row_argmax = row
                     .indexed_iter()
-                    .max_by(|(_, &a), (_, &b)| a.partial_cmp(&b).unwrap())
+                    .max_by(|(_, &a), (_, &b)| {
+                        let ordering = a.partial_cmp(&b);
+                        if ordering.is_none() {
+                            dbg!(a, b);
+                            panic!("NaN in softmax output")
+                        }
+                        ordering.unwrap()
+                    })
                     .unwrap()
                     .0;
                 row_argmax
@@ -175,7 +182,7 @@ impl FinalActivation<Array2<f64>> for Sigmoid {
 
 /// Not in the book, my own addition to try to make a simple perceptron
 #[derive(Default, Clone, Debug)]
-pub struct Step{
+pub struct Step {
     pub output: Option<Array2<f64>>,
     pub inputs: Option<Array2<f64>>,
     pub dinputs: Option<Array2<f64>>,
@@ -209,7 +216,6 @@ impl FinalActivation<Array2<usize>> for Step {
         self.output().mapv(|x| if x > 0.5 { 1 } else { 0 })
     }
 }
-
 
 #[derive(Default, Clone, Debug)]
 pub struct Linear {

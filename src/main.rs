@@ -1,9 +1,10 @@
-use nnfs::{ch10::Ch10Args, ch18::Ch18Args};
 use nnfs::ch11::Ch11Args;
 use nnfs::ch14::Ch14Args;
 use nnfs::ch15::Ch15Args;
 use nnfs::ch16::Ch16Args;
 use nnfs::ch17::Ch17Args;
+use nnfs::ch19::Ch19Args;
+use nnfs::{ch10::Ch10Args, ch18::Ch18Args};
 use nnfs_rust as nnfs;
 
 use clap::{Parser, Subcommand};
@@ -24,6 +25,7 @@ enum Commands {
     Ch16(Ch16Args),
     Ch17(Ch17Args),
     Ch18(Ch18Args),
+    Ch19(Ch19Args),
 }
 
 fn main() {
@@ -36,5 +38,6 @@ fn main() {
         Commands::Ch16(args) => nnfs::ch16::run(args),
         Commands::Ch17(args) => nnfs::ch17::run(args),
         Commands::Ch18(args) => nnfs::ch18::run(args),
+        Commands::Ch19(args) => nnfs::ch19::run(args),
     }
 }
